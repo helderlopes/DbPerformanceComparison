@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DbPerformanceComparison": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
