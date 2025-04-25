@@ -11,20 +11,17 @@ namespace DbPerformanceComparison.Services.Parser
 {
     public class ResultCsvParser
     {
-        private readonly Dictionary<string, Athlete> _athleteMap = new();
-
         public (List<Athlete> athletes, List<Result> results) Parse(string csvPath, List<Event> existingEvents)
         {
-            var athletes = new List<Athlete>();
-            var results = new List<Result>();
+            Dictionary<string, Athlete> athleteMap = new();
+            List<Athlete> athletes = new();
+            List<Result> results = new();
 
-            using var reader = new StreamReader(csvPath);
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            using StreamReader reader = new StreamReader(csvPath);
+            using CsvReader csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             csv.Read();
             csv.ReadHeader();
 
-            //local_time,sex,event,round,startlist_url,results_url,summary_url,points_url
-            //pos,bib,name,country,mark
             while (csv.Read())
             {
                 var name = csv.GetField("name");
@@ -34,10 +31,12 @@ namespace DbPerformanceComparison.Services.Parser
                 var round = csv.GetField("round");
 
                 if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(eventName))
+                { 
                     continue;
+                }
 
                 var athleteKey = $"{name}|{country}";
-                if (!_athleteMap.TryGetValue(athleteKey, out var athlete))
+                if (!athleteMap.TryGetValue(athleteKey, out var athlete))
                 {
                     athlete = new Athlete
                     {
@@ -45,15 +44,17 @@ namespace DbPerformanceComparison.Services.Parser
                         Country = country,
                         Sex = sex
                     };
-                    _athleteMap[athleteKey] = athlete;
+                    athleteMap[athleteKey] = athlete;
                     athletes.Add(athlete);
                 }
 
-                var ev = existingEvents.FirstOrDefault(e =>
+                Event? currentEvent = existingEvents.FirstOrDefault(e =>
                     e.Name == eventName && e.Sex == sex && e.Round == round);
 
-                if (ev == null)
+                if (currentEvent == null)
+                {
                     continue;
+                }
 
                 int? TryParseDoubleAsInt(string field)
                     => double.TryParse(csv.GetField(field), NumberStyles.Any, CultureInfo.InvariantCulture, out var val) ? (int)val : null;
@@ -61,12 +62,12 @@ namespace DbPerformanceComparison.Services.Parser
                 DateTime? TryParseDate(string field)
                     => DateTime.TryParse(csv.GetField(field), out var val) ? val : null;
 
-                var result = new Result
+                Result result = new Result
                 {
                     Athlete = athlete,
                     AthleteId = athlete.Id,
-                    Event = ev,
-                    EventId = ev.Id,
+                    Event = currentEvent,
+                    EventId = currentEvent.Id,
                     Position = TryParseDoubleAsInt("pos"),
                     Bib = TryParseDoubleAsInt("bib"),
                     Mark = TryParseDate("mark")

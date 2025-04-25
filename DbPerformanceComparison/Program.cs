@@ -7,8 +7,8 @@ namespace DbPerformanceComparison
     {
         static void Main(string[] args)
         {
-            var eventsPath = Path.Combine("Input", "events.csv");
-            var resultsPath = Path.Combine("Input", "results.csv");
+            string eventsPath = Path.Combine("Input", "events.csv");
+            string resultsPath = Path.Combine("Input", "results.csv");
 
             EventCsvParser eventParser = new ();
             ResultCsvParser resultParser = new ();
