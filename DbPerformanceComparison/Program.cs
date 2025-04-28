@@ -1,4 +1,6 @@
-﻿using DbPerformanceComparison.Services.Parser;
+﻿using DbPerformanceComparison.Infrastructure.Postgres;
+using DbPerformanceComparison.Repositories.Postgres;
+using DbPerformanceComparison.Services.Parser;
 using Microsoft.Extensions.Configuration;
 
 namespace DbPerformanceComparison
@@ -10,8 +12,8 @@ namespace DbPerformanceComparison
             string eventsPath = Path.Combine("Input", "events.csv");
             string resultsPath = Path.Combine("Input", "results.csv");
 
-            EventCsvParser eventParser = new ();
-            ResultCsvParser resultParser = new ();
+            EventCsvParser eventParser = new();
+            ResultCsvParser resultParser = new();
 
             try
             {
@@ -20,7 +22,7 @@ namespace DbPerformanceComparison
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error reading csv: {ex.Message}");
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }
