@@ -13,7 +13,7 @@ namespace DbPerformanceComparison.Infrastructure.Postgres
 
         public async Task<NpgsqlConnection> GetConnectionAsync()
         {
-            var conn = new NpgsqlConnection(_connectionString);
+            NpgsqlConnection conn = new(_connectionString);
             await conn.OpenAsync();
             return conn;
         }

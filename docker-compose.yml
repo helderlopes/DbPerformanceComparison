@@ -1,0 +1,25 @@
+services:
+  dbperformancecomparison:
+    image: ${DOCKER_REGISTRY-}dbperformancecomparison
+    build:
+      context: .
+      dockerfile: DbPerformanceComparison/Dockerfile
+    environment:
+      - POSTGRES__HOST=postgres
+      - POSTGRES__PORT=5432
+      - POSTGRES__DATABASE=db_performance_comparison
+      - POSTGRES__USERNAME=myuser
+      - POSTGRES__PASSWORD=mypassword
+    depends_on:
+      - postgres
+    ports:
+      - "80:80"
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: db_performance_comparison
+    ports:
+      - "5432:5432"

@@ -24,7 +24,7 @@ namespace DbPerformanceComparison.Services.Parser
             {
                 records.Add(new Event
                 {
-                    LocalTime = DateTime.TryParse(csv.GetField("local_time"), out var parsedDate) ? parsedDate : null,
+                    EventTime = DateTime.TryParse(csv.GetField("local_time"), out var parsedDate) ? parsedDate : null,
                     Sex = csv.GetField("sex"),
                     Name = csv.GetField("event"),
                     Round = csv.GetField("round"),

@@ -18,6 +18,10 @@ namespace DbPerformanceComparison.Infrastructure.Postgres
             NpgsqlCommand command = connection.CreateCommand();
 
             command.CommandText = @"
+                    DROP TABLE IF EXISTS Results;
+                    DROP TABLE IF EXISTS Events;
+                    DROP TABLE IF EXISTS Athletes;
+
                     CREATE TABLE IF NOT EXISTS Athletes (
                         Id SERIAL PRIMARY KEY,
                         Name TEXT,
@@ -28,7 +32,7 @@ namespace DbPerformanceComparison.Infrastructure.Postgres
                     CREATE TABLE IF NOT EXISTS Events (
                         Id SERIAL PRIMARY KEY,
                         Name TEXT,
-                        LocalTime TIME,
+                        EventTime TIME,
                         Sex TEXT,
                         Round TEXT,
                         StartListUrl TEXT,
