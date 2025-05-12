@@ -59,8 +59,8 @@ namespace DbPerformanceComparison.Services.Parser
                 int? TryParseDoubleAsInt(string field)
                     => double.TryParse(csv.GetField(field), NumberStyles.Any, CultureInfo.InvariantCulture, out var val) ? (int)val : null;
 
-                DateTime? TryParseDate(string field)
-                    => DateTime.TryParse(csv.GetField(field), out var val) ? val : null;
+                TimeSpan? TryParseTime(string field)
+                    => TimeSpan.TryParse(csv.GetField(field), out var val) ? val : null;
 
                 Result result = new Result
                 {
@@ -70,7 +70,7 @@ namespace DbPerformanceComparison.Services.Parser
                     EventId = currentEvent.Id,
                     Position = TryParseDoubleAsInt("pos"),
                     Bib = TryParseDoubleAsInt("bib"),
-                    Mark = TryParseDate("mark")
+                    Mark = TryParseTime("mark")
                 };
 
                 results.Add(result);

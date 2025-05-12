@@ -7,5 +7,5 @@ public class Result
     public int? EventId { get; set; }
     public int? Position { get; set; }
     public int? Bib { get; set; }
-    public DateTime? Mark { get; set; }
+    public TimeSpan? Mark { get; set; }
 }
