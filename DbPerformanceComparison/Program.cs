@@ -31,7 +31,7 @@ namespace DbPerformanceComparison
 
                 TableInitializer initializer = new(postgresService);
 
-                await initializer.InitializeTablesAsync();
+                await initializer.InitializeTablesAsync(true);
 
                 AthleteRepository athleteRepository = new(postgresService);
 
@@ -42,6 +42,17 @@ namespace DbPerformanceComparison
                 foreach (Athlete athlete in athletes)
                 {
                     await athleteRepository.DeleteAsync(athlete.Id);
+                }
+
+                EventRepository eventRepository = new(postgresService);
+
+                await eventRepository.AddManyAsync(events);
+
+                List<Event> listEvents = (await eventRepository.GetAllAsync()).ToList();
+
+                foreach (Event entity in listEvents)
+                {
+                    await athleteRepository.DeleteAsync(entity.Id);
                 }
             }
             catch (Exception ex)

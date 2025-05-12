@@ -1,4 +1,6 @@
 ﻿using Npgsql;
+using System.Linq;
+using System.Text;
 
 namespace DbPerformanceComparison.Infrastructure.Postgres
 {
@@ -11,46 +13,53 @@ namespace DbPerformanceComparison.Infrastructure.Postgres
             _postgresService = postgresService;
         }
 
-        public async Task InitializeTablesAsync()
+        public async Task InitializeTablesAsync(bool dropTables = false)
         {
             NpgsqlConnection connection = await _postgresService.GetConnectionAsync();
 
             NpgsqlCommand command = connection.CreateCommand();
 
-            command.CommandText = @"
-                    DROP TABLE IF EXISTS Results;
-                    DROP TABLE IF EXISTS Events;
-                    DROP TABLE IF EXISTS Athletes;
+            StringBuilder commandText = new();
 
-                    CREATE TABLE IF NOT EXISTS Athletes (
-                        Id SERIAL PRIMARY KEY,
-                        Name TEXT,
-                        Sex TEXT,
-                        Country TEXT
-                    );
+            if (dropTables)
+            {
+                commandText.Append(@"
+                        DROP TABLE IF EXISTS Results; 
+                        DROP TABLE IF EXISTS Events; 
+                        DROP TABLE IF EXISTS Athletes;");
+            }
 
-                    CREATE TABLE IF NOT EXISTS Events (
-                        Id SERIAL PRIMARY KEY,
-                        Name TEXT,
-                        EventTime TIME,
-                        Sex TEXT,
-                        Round TEXT,
-                        StartListUrl TEXT,
-                        ResultsUrl TEXT,
-                        SummaryUrl TEXT,
-                        PointsUrl TEXT
-                    );
+            commandText.Append(@"
+                       CREATE TABLE IF NOT EXISTS Athletes (
+                           Id SERIAL PRIMARY KEY,
+                           Name TEXT,
+                           Sex TEXT,
+                           Country TEXT
+                       );
 
-                    CREATE TABLE IF NOT EXISTS Results (
-                        Id SERIAL PRIMARY KEY,
-                        AthleteId INTEGER REFERENCES Athletes(Id) ON DELETE CASCADE,
-                        EventId INTEGER REFERENCES Events(Id) ON DELETE CASCADE,
-                        Position INTEGER,
-                        Bib INTEGER,
-                        Mark TIME
-                    );
-                ";
+                       CREATE TABLE IF NOT EXISTS Events (
+                           Id SERIAL PRIMARY KEY,
+                           Name TEXT,
+                           EventTime TIME,
+                           Sex TEXT,
+                           Round TEXT,
+                           StartListUrl TEXT,
+                           ResultsUrl TEXT,
+                           SummaryUrl TEXT,
+                           PointsUrl TEXT
+                       );
 
+                       CREATE TABLE IF NOT EXISTS Results (
+                           Id SERIAL PRIMARY KEY,
+                           AthleteId INTEGER REFERENCES Athletes(Id) ON DELETE CASCADE,
+                           EventId INTEGER REFERENCES Events(Id) ON DELETE CASCADE,
+                           Position INTEGER,
+                           Bib INTEGER,
+                           Mark TIME
+                       );
+                   ");
+
+            command.CommandText = commandText.ToString(); 
             await command.ExecuteNonQueryAsync();
         }
     }

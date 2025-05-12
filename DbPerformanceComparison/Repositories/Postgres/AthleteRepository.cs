@@ -13,10 +13,10 @@ namespace DbPerformanceComparison.Repositories.Postgres
         {
             _service = service;
         }
-        public async Task AddAsync(Athlete entity)
+        public async Task<int> AddAsync(Athlete entity)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
-            string query = "INSERT INTO Athletes (Name, Sex, Country) VALUES (@Name, @Sex, @Country)";
+            string query = "INSERT INTO Athletes (Name, Sex, Country) VALUES (@Name, @Sex, @Country) RETURNING Id";
 
             await using NpgsqlCommand command = new(query, connection);
 
@@ -24,7 +24,11 @@ namespace DbPerformanceComparison.Repositories.Postgres
             command.Parameters.AddWithValue("@Sex", entity.Sex ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Country", entity.Country ?? (object)DBNull.Value);
 
-            await command.ExecuteNonQueryAsync();
+            var result = await command.ExecuteScalarAsync();
+
+            entity.Id = Convert.ToInt32(result);
+
+            return entity.Id;
         }
 
         public async Task AddManyAsync(IEnumerable<Athlete> entities)
@@ -35,12 +39,12 @@ namespace DbPerformanceComparison.Repositories.Postgres
             List<NpgsqlParameter> parameters = new();
             int index = 0;
 
-            foreach (var athlete in entities)
+            foreach (var entity in entities)
             {
                 queryBuilder.Append($"(@Name{index}, @Sex{index}, @Country{index}),");
-                parameters.Add(new NpgsqlParameter($"@Name{index}", athlete.Name ?? (object)DBNull.Value));
-                parameters.Add(new NpgsqlParameter($"@Sex{index}", athlete.Sex ?? (object)DBNull.Value));
-                parameters.Add(new NpgsqlParameter($"@Country{index}", athlete.Country ?? (object)DBNull.Value));
+                parameters.Add(new NpgsqlParameter($"@Name{index}", entity.Name ?? (object)DBNull.Value));
+                parameters.Add(new NpgsqlParameter($"@Sex{index}", entity.Sex ?? (object)DBNull.Value));
+                parameters.Add(new NpgsqlParameter($"@Country{index}", entity.Country ?? (object)DBNull.Value));
                 index++;
             }
 
@@ -62,9 +66,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
             command.Parameters.AddWithValue("@Id", id);
 
-            int rowsAffected = await command.ExecuteNonQueryAsync();
-
-            return rowsAffected > 0;
+            return await command.ExecuteNonQueryAsync() > 0;
         }
 
         public async Task<IEnumerable<Athlete>> GetAllAsync()
@@ -118,7 +120,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             return null;
         }
 
-        public async Task UpdateAsync(Athlete entity)
+        public async Task<bool> UpdateAsync(Athlete entity)
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
 
@@ -133,7 +135,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             command.Parameters.AddWithValue("@Sex", entity.Sex ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Country", entity.Country ?? (object)DBNull.Value);
 
-            await command.ExecuteNonQueryAsync();
+            return await command.ExecuteNonQueryAsync() > 0;
         }
     }
 }
