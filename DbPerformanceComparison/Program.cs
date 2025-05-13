@@ -37,12 +37,7 @@ namespace DbPerformanceComparison
 
                 await athleteRepository.AddManyAsync(lists.athletes);
 
-                List<Athlete> athletes = (await athleteRepository.GetAllAsync()).ToList();
-                
-                foreach (Athlete athlete in athletes)
-                {
-                    await athleteRepository.DeleteAsync(athlete.Id);
-                }
+                List<Athlete> listAthletes = (await athleteRepository.GetAllAsync()).ToList();
 
                 EventRepository eventRepository = new(postgresService);
 
@@ -50,7 +45,15 @@ namespace DbPerformanceComparison
 
                 List<Event> listEvents = (await eventRepository.GetAllAsync()).ToList();
 
-                foreach (Event entity in listEvents)
+                ResultRepository resultRepository = new(postgresService);
+
+
+
+                await resultRepository.AddManyAsync(lists.results);
+
+                List<Result> listResults = (await resultRepository.GetAllAsync()).ToList();
+
+                foreach (Result entity in listResults)
                 {
                     await athleteRepository.DeleteAsync(entity.Id);
                 }

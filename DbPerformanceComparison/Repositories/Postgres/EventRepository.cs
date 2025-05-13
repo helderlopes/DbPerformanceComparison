@@ -120,7 +120,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
-            string query = "SELECT Id, Name, EventTime, Sex, Round, StartListurl, ResultsUrl, SummaryUrl, PointsUrl FROM Events WHERE Id = @Id";
+            string query = "SELECT Name, EventTime, Sex, Round, StartListurl, ResultsUrl, SummaryUrl, PointsUrl FROM Events WHERE Id = @Id";
 
             await using NpgsqlCommand command = new(query, connection);
             command.Parameters.AddWithValue("@Id", id);
@@ -131,15 +131,15 @@ namespace DbPerformanceComparison.Repositories.Postgres
             {
                 return new Event
                 {
-                    Id = reader.GetInt32(0),
-                    Name = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    EventTime = reader.IsDBNull(2) ? null : reader.GetTimeSpan(2),
-                    Sex = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    Round = reader.IsDBNull(4) ? null : reader.GetString(4),
-                    StartListUrl = reader.IsDBNull(5) ? null : reader.GetString(5),
-                    ResultsUrl = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    SummaryUrl = reader.IsDBNull(7) ? null : reader.GetString(7),
-                    PointsUrl = reader.IsDBNull(8) ? null : reader.GetString(8)
+                    Id = id,
+                    Name = reader.IsDBNull(0) ? null : reader.GetString(0),
+                    EventTime = reader.IsDBNull(1) ? null : reader.GetTimeSpan(1),
+                    Sex = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Round = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    StartListUrl = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    ResultsUrl = reader.IsDBNull(5) ? null : reader.GetString(5),
+                    SummaryUrl = reader.IsDBNull(6) ? null : reader.GetString(6),
+                    PointsUrl = reader.IsDBNull(7) ? null : reader.GetString(7)
                 };
             }
 
@@ -148,7 +148,10 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
         public async Task<bool> UpdateAsync(Event entity)
         {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
 
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 

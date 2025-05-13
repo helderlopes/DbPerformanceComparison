@@ -19,14 +19,6 @@ namespace DbPerformanceComparison.Repositories.Postgres
             _service = service;
         }
 
-        /*
-            Id SERIAL PRIMARY KEY,
-            AthleteId INTEGER REFERENCES Athletes(Id) ON DELETE CASCADE,
-            EventId INTEGER REFERENCES Events(Id) ON DELETE CASCADE,
-            Position INTEGER,
-            Bib INTEGER,
-            Mark TIME
-         */
         public async Task<int> AddAsync(Result entity)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
@@ -92,24 +84,95 @@ namespace DbPerformanceComparison.Repositories.Postgres
             }
         }
 
-        public Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            await using NpgsqlConnection connection = await _service.GetConnectionAsync();
+
+            string query = "DELETE FROM Results WHERE Id = @Id";
+
+            await using NpgsqlCommand command = new(query, connection);
+
+            command.Parameters.AddWithValue("@Id", id);
+
+            return await command.ExecuteNonQueryAsync() > 0;
         }
 
-        public Task<IEnumerable<Result>> GetAllAsync()
+        public async Task<IEnumerable<Result>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            await using NpgsqlConnection connection = await _service.GetConnectionAsync();
+
+            string query = "SELECT Id, AthleteId, EventId, Position, Bib, Mark FROM Results";
+
+            await using NpgsqlCommand command = new(query, connection);
+
+            await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+
+            List<Result> results = new();
+
+            while (await reader.ReadAsync())
+            {
+                results.Add(new Result
+                {
+                    Id = reader.GetInt32(0),
+                    AthleteId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                    EventId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    Position = reader.IsDBNull(3) ? null : reader.GetInt32(3),
+                    Bib = reader.IsDBNull(4) ? null : reader.GetInt32(4),
+                    Mark = reader.IsDBNull(5) ? null : reader.GetTimeSpan(5)
+                });
+            }
+
+            return results;
         }
 
-        public Task<Result?> GetByIdAsync(int id)
+        public async Task<Result?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            await using NpgsqlConnection connection = await _service.GetConnectionAsync();
+
+            string query = "SELECT Id, AthleteId, EventId, Position, Bib, Mark FROM Results WHERE Id = @Id";
+
+            await using NpgsqlCommand command = new(query, connection);
+            command.Parameters.AddWithValue("@Id", id);
+
+            await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new Result
+                {
+                    Id = id,
+                    AthleteId = reader.IsDBNull(0) ? null : reader.GetInt32(0),
+                    EventId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                    Position = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    Bib = reader.IsDBNull(3) ? null : reader.GetInt32(3),
+                    Mark = reader.IsDBNull(4) ? null : reader.GetTimeSpan(4)
+                };
+            }
+
+            return null;
         }
 
-        public Task<bool> UpdateAsync(Result entity)
+        public async Task<bool> UpdateAsync(Result entity)
         {
-            throw new NotImplementedException();
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            await using NpgsqlConnection connection = await _service.GetConnectionAsync();
+
+            string query = "UPDATE Results SET AthleteId = @AthleteId, EventId = @EventId, Position = @Position, Bib = @Bib, Mark = @Mark WHERE Id = @Id";
+
+            await using NpgsqlCommand command = new(query, connection);
+
+            command.Parameters.AddWithValue("@Id", entity.Id);
+            command.Parameters.AddWithValue("@AthleteId", entity.AthleteId ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@EventId", entity.EventId ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Position", entity.Position ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Bib", entity.Bib ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Mark", entity.Mark ?? (object)DBNull.Value);
+
+            return await command.ExecuteNonQueryAsync() > 0;
         }
     }
 }
