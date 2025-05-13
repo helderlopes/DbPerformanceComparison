@@ -1,5 +1,6 @@
 ﻿using DbPerformanceComparison.Infrastructure.Postgres;
 using DbPerformanceComparison.Repositories.Postgres;
+using DbPerformanceComparison.Services.ConfigurationBuilder;
 using DbPerformanceComparison.Services.Parser;
 using Microsoft.Extensions.Configuration;
 
@@ -7,7 +8,7 @@ namespace DbPerformanceComparison
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        static public (List<Athlete> athletes, List<Result> results, List<Event> events) ParseInputFiles()
         {
             string eventsPath = Path.Combine("Input", "events.csv");
             string resultsPath = Path.Combine("Input", "results.csv");
@@ -15,75 +16,73 @@ namespace DbPerformanceComparison
             EventCsvParser eventParser = new();
             ResultCsvParser resultParser = new();
 
+            List<Event> events = eventParser.Parse(eventsPath);
+            (List<Athlete> athletes, List<Result> results) lists = resultParser.Parse(resultsPath, events);
+
+            return (lists.athletes, lists.results, events);
+        }
+
+        static async Task<List<Athlete>> SeedAthletesAsync(PostgresService postgresService, List<Athlete> athletes)
+        {
+            AthleteRepository athleteRepository = new(postgresService);
+
+            await athleteRepository.AddManyAsync(athletes);
+
+            return (await athleteRepository.GetAllAsync()).ToList();
+        }
+
+        static async Task<List<Event>> SeedEventsAsync(PostgresService postgresService, List<Event> events)
+        {
+            EventRepository eventRepository = new(postgresService);
+
+            await eventRepository.AddManyAsync(events);
+
+            return (await eventRepository.GetAllAsync()).ToList();
+        }
+
+        static void MapResultReferences(List<Result> results, List<Athlete> athletes, List<Event> events)
+        {
+            foreach (var result in results)
+            {
+                if (result.Athlete != null)
+                {
+                    result.AthleteId = athletes.FirstOrDefault(a => a.Name == result.Athlete.Name && a.Country == result.Athlete.Country)?.Id;
+                }
+                if (result.Event != null)
+                {
+                    result.EventId = events.FirstOrDefault(e => e.Name == result.Event.Name)?.Id;
+                }
+            }
+        }
+
+        static async Task<List<Result>> SeedResultsAsync(PostgresService postgresService, List<Result> results)
+        {
+            ResultRepository resultRepository = new(postgresService);
+
+            await resultRepository.AddManyAsync(results);
+
+            return (await resultRepository.GetAllAsync()).ToList();
+        }
+
+        static async Task Main(string[] args)
+        {
             try
             {
-                List<Event> events = eventParser.Parse(eventsPath);
-                (List<Athlete> athletes, List<Result> results) lists = resultParser.Parse(resultsPath, events);
-
-                var config = new ConfigurationBuilder()
-                    .AddEnvironmentVariables()
-                    .AddJsonFile("appsettings.json", optional: true)
-                    .Build();
-
-                string connectionString = $"Host={config["Postgres:Host"]};Port={config["Postgres:Port"]};Username={config["Postgres:Username"]};Password={config["Postgres:Password"]};Database={config["Postgres:Database"]}";
-
+                ConfigurationBuilderService configurationBuilderService = new();
+                string connectionString = configurationBuilderService.GetPostgresConnectionString();
+                
                 PostgresService postgresService = new(connectionString);
-
                 TableInitializer initializer = new(postgresService);
-
                 await initializer.InitializeTablesAsync(true);
 
-                AthleteRepository athleteRepository = new(postgresService);
+                (List<Athlete> athletes, List<Result> results, List<Event> events) = ParseInputFiles();
 
-                await athleteRepository.AddManyAsync(lists.athletes);
+                athletes = await SeedAthletesAsync(postgresService, athletes);
+                events = await SeedEventsAsync(postgresService, events);
 
-                List<Athlete> listAthletes = (await athleteRepository.GetAllAsync()).ToList();
+                MapResultReferences(results, athletes, events);
 
-                EventRepository eventRepository = new(postgresService);
-
-                await eventRepository.AddManyAsync(events);
-
-                List<Event> listEvents = (await eventRepository.GetAllAsync()).ToList();
-
-                //get athlete and event ids and add to lists.results
-                Dictionary<string, int> athleteDict = listAthletes.ToDictionary(a => $"{a.Name}|{a.Country}", a => a.Id);
-                Dictionary<string, int> eventDict = listEvents
-                                                        .Where(e => e.Name != null)
-                                                        .DistinctBy(e => e.Name)
-                                                        .ToDictionary(e => e.Name!, e => e.Id);
-
-                foreach (var result in lists.results)
-                {
-                    if (result.Athlete?.Name is not null && result.Athlete?.Country is not null)
-                    {
-                        string athleteKey = $"{result.Athlete.Name}|{result.Athlete.Country}";
-
-                        if (athleteDict.TryGetValue(athleteKey, out int athleteId))
-                        {
-                            result.AthleteId = athleteId;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Athlete not found: {result.Athlete.Name} from {result.Athlete.Country}");
-                        }
-                    }
-
-                    if (result.Event?.Name is not null && eventDict.TryGetValue(result.Event.Name, out int eventId))
-                    {
-                        result.EventId = eventId;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Event not found: {result.Event?.Name}");
-                    }
-                }
-
-                ResultRepository resultRepository = new(postgresService);
-
-                await resultRepository.AddManyAsync(lists.results);
-
-                List<Result> listResults = (await resultRepository.GetAllAsync()).ToList();
-
+                results = await SeedResultsAsync(postgresService, results);
             }
             catch (Exception ex)
             {
