@@ -45,18 +45,45 @@ namespace DbPerformanceComparison
 
                 List<Event> listEvents = (await eventRepository.GetAllAsync()).ToList();
 
+                //get athlete and event ids and add to lists.results
+                Dictionary<string, int> athleteDict = listAthletes.ToDictionary(a => $"{a.Name}|{a.Country}", a => a.Id);
+                Dictionary<string, int> eventDict = listEvents
+                                                        .Where(e => e.Name != null)
+                                                        .DistinctBy(e => e.Name)
+                                                        .ToDictionary(e => e.Name!, e => e.Id);
+
+                foreach (var result in lists.results)
+                {
+                    if (result.Athlete?.Name is not null && result.Athlete?.Country is not null)
+                    {
+                        string athleteKey = $"{result.Athlete.Name}|{result.Athlete.Country}";
+
+                        if (athleteDict.TryGetValue(athleteKey, out int athleteId))
+                        {
+                            result.AthleteId = athleteId;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Athlete not found: {result.Athlete.Name} from {result.Athlete.Country}");
+                        }
+                    }
+
+                    if (result.Event?.Name is not null && eventDict.TryGetValue(result.Event.Name, out int eventId))
+                    {
+                        result.EventId = eventId;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Event not found: {result.Event?.Name}");
+                    }
+                }
+
                 ResultRepository resultRepository = new(postgresService);
-
-
 
                 await resultRepository.AddManyAsync(lists.results);
 
                 List<Result> listResults = (await resultRepository.GetAllAsync()).ToList();
 
-                foreach (Result entity in listResults)
-                {
-                    await athleteRepository.DeleteAsync(entity.Id);
-                }
             }
             catch (Exception ex)
             {
