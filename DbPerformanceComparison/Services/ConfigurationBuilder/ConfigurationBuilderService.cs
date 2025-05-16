@@ -22,5 +22,15 @@ namespace DbPerformanceComparison.Services.ConfigurationBuilder
         {
             return $"Host={_configurationRoot["Postgres:Host"]};Port={_configurationRoot["Postgres:Port"]};Username={_configurationRoot["Postgres:Username"]};Password={_configurationRoot["Postgres:Password"]};Database={_configurationRoot["Postgres:Database"]}";
         }
+
+        public string GetMongoConnectionString()
+        {
+            return $"mongodb://{_configurationRoot["Mongo:Username"]}:{_configurationRoot["Mongo:Password"]}@{_configurationRoot["Mongo:Host"]}:{_configurationRoot["Mongo:Port"]}";
+        }
+
+        public string GetMongoDatabaseName()
+        {
+            return _configurationRoot["Mongo:Database"] ?? string.Empty;
+        }
     }
 }

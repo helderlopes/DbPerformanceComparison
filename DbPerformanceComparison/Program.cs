@@ -69,9 +69,9 @@ namespace DbPerformanceComparison
             try
             {
                 ConfigurationBuilderService configurationBuilderService = new();
-                string connectionString = configurationBuilderService.GetPostgresConnectionString();
+                string postgresConnectionString = configurationBuilderService.GetPostgresConnectionString();
                 
-                PostgresService postgresService = new(connectionString);
+                PostgresService postgresService = new(postgresConnectionString);
                 TableInitializer initializer = new(postgresService);
                 await initializer.InitializeTablesAsync(true);
 

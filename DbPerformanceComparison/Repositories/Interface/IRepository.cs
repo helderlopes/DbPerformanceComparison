@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace DbPerformanceComparison.Repositories.Interfaces
 {
-    public interface IRepository<T> where T : class
+    public interface IRepository<T, TKey>
     {
-        Task<int> AddAsync(T entity);
+        Task AddAsync(T entity);
         Task AddManyAsync(IEnumerable<T> entities);
-        Task<T?> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(TKey id);
         Task<IEnumerable<T>> GetAllAsync();
-        Task<bool> UpdateAsync(T entity);
-        Task<bool> DeleteAsync(int id);
+        Task<bool> UpdateAsync(T entity, TKey id);
+        Task<bool> DeleteAsync(TKey id);
     }
 }

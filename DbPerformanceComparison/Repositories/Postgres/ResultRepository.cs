@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DbPerformanceComparison.Repositories.Postgres
 {
-    public class ResultRepository : IRepository<Result>
+    public class ResultRepository : IRepository<Result, int>
     {
         private readonly PostgresService _service;
 
@@ -19,7 +19,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             _service = service;
         }
 
-        public async Task<int> AddAsync(Result entity)
+        public async Task AddAsync(Result entity)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
             string query =  "INSERT INTO Results (AthleteId, EventId, Position, Bib, Mark) " +
@@ -37,16 +37,12 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
             try
             {
-                var result = await command.ExecuteScalarAsync();
-
-                entity.Id = Convert.ToInt32(result);
+                entity.Id = Convert.ToInt32(await command.ExecuteScalarAsync());
             }
             catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
             {
                 Console.WriteLine("Error: invalid Foreign Key.");
             }
-
-            return entity.Id;
         }
 
         public async Task AddManyAsync(IEnumerable<Result> entities)
@@ -152,7 +148,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             return null;
         }
 
-        public async Task<bool> UpdateAsync(Result entity)
+        public async Task<bool> UpdateAsync(Result entity, int id)
         {
             if (entity is null)
             {
@@ -165,7 +161,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
             await using NpgsqlCommand command = new(query, connection);
 
-            command.Parameters.AddWithValue("@Id", entity.Id);
+            command.Parameters.AddWithValue("@Id", id);
             command.Parameters.AddWithValue("@AthleteId", entity.AthleteId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@EventId", entity.EventId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Position", entity.Position ?? (object)DBNull.Value);

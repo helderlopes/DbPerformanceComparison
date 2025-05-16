@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DbPerformanceComparison.Repositories.Postgres
 {
-    public class AthleteRepository : IRepository<Athlete>
+    public class AthleteRepository : IRepository<Athlete, int>
     {
         private readonly PostgresService _service;
 
@@ -13,7 +13,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
         {
             _service = service;
         }
-        public async Task<int> AddAsync(Athlete entity)
+        public async Task AddAsync(Athlete entity)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
             string query = "INSERT INTO Athletes (Name, Sex, Country) VALUES (@Name, @Sex, @Country) RETURNING Id";
@@ -24,11 +24,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             command.Parameters.AddWithValue("@Sex", entity.Sex ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Country", entity.Country ?? (object)DBNull.Value);
 
-            var result = await command.ExecuteScalarAsync();
-
-            entity.Id = Convert.ToInt32(result);
-
-            return entity.Id;
+            entity.Id = Convert.ToInt32(await command.ExecuteScalarAsync());
         }
 
         public async Task AddManyAsync(IEnumerable<Athlete> entities)
@@ -120,7 +116,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             return null;
         }
 
-        public async Task<bool> UpdateAsync(Athlete entity)
+        public async Task<bool> UpdateAsync(Athlete entity, int id)
         {
             if (entity is null)
             {
@@ -133,7 +129,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
             await using NpgsqlCommand command = new(query, connection);
 
-            command.Parameters.AddWithValue("@Id", entity.Id);
+            command.Parameters.AddWithValue("@Id", id);
             command.Parameters.AddWithValue("@Name", entity.Name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Sex", entity.Sex ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Country", entity.Country ?? (object)DBNull.Value);
