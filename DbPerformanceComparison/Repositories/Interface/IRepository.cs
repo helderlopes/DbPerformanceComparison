@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DbPerformanceComparison.Repositories.Interfaces
 {
-    public interface IRepository<T, TKey>
+    public interface IRepository<T, TKey> where T : class
     {
         Task AddAsync(T entity);
         Task AddManyAsync(IEnumerable<T> entities);
