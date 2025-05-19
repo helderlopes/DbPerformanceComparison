@@ -1,5 +1,12 @@
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+using System.ComponentModel.DataAnnotations.Schema;
+
 public class Result
 {
+    [BsonId]
+    [BsonRepresentation(BsonType.String)]
+    [Column("Id")]
     public Guid Id { get; set; }
     public Athlete? Athlete { get; set; }
     public Guid? AthleteId { get; set; }

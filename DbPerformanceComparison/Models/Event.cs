@@ -1,5 +1,12 @@
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+using System.ComponentModel.DataAnnotations.Schema;
+
 public class Event
 {
+    [BsonId]
+    [BsonRepresentation(BsonType.String)]
+    [Column("Id")]
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public TimeSpan? EventTime { get; set; }

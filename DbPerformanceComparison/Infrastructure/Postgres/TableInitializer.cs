@@ -51,8 +51,8 @@ namespace DbPerformanceComparison.Infrastructure.Postgres
 
                        CREATE TABLE IF NOT EXISTS Results (
                            Id UUID PRIMARY KEY,
-                           AthleteId INTEGER REFERENCES Athletes(Id) ON DELETE CASCADE,
-                           EventId INTEGER REFERENCES Events(Id) ON DELETE CASCADE,
+                           AthleteId UUID REFERENCES Athletes(Id) ON DELETE CASCADE,
+                           EventId UUID REFERENCES Events(Id) ON DELETE CASCADE,
                            Position INTEGER,
                            Bib INTEGER,
                            Mark TIME

@@ -81,6 +81,7 @@ namespace DbPerformanceComparison
                 MongoRepository<Event> mongoEventRepository = new(mongoService);
 
                 await mongoAthleteRepository.AddManyAsync(athletes);
+                //TODO: Fix this
                 await mongoResultRepository.AddManyAsync(results);
                 await mongoEventRepository.AddManyAsync(events);
             }

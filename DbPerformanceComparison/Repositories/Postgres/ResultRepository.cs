@@ -22,8 +22,8 @@ namespace DbPerformanceComparison.Repositories.Postgres
         public async Task AddAsync(Result entity)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
-            string query =  "INSERT INTO Results (@Id, AthleteId, EventId, Position, Bib, Mark) " +
-                            "VALUES (@AthleteId, @EventId, @Position, @Bib, @Mark)";
+            string query =  "INSERT INTO Results (Id, AthleteId, EventId, Position, Bib, Mark) " +
+                            "VALUES (@Id, @AthleteId, @EventId, @Position, @Bib, @Mark)";
 
             await using NpgsqlCommand command = new(query, connection);
 
@@ -48,13 +48,13 @@ namespace DbPerformanceComparison.Repositories.Postgres
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
-            StringBuilder queryBuilder = new("INSERT INTO Results (@Id, AthleteId, EventId, Position, Bib, Mark) VALUES ");
+            StringBuilder queryBuilder = new("INSERT INTO Results (Id, AthleteId, EventId, Position, Bib, Mark) VALUES ");
             List<NpgsqlParameter> parameters = new();
             int index = 0;
 
             foreach (var entity in entities)
             {
-                queryBuilder.Append($"(@AthleteId{index}, @EventId{index}, @Position{index}, @Bib{index}, @Mark{index}),");
+                queryBuilder.Append($"(@Id{index}, @AthleteId{index}, @EventId{index}, @Position{index}, @Bib{index}, @Mark{index}),");
                 parameters.Add(new NpgsqlParameter($"@Id{index}", entity.Id));
                 parameters.Add(new NpgsqlParameter($"@AthleteId{index}", entity.AthleteId ?? (object)DBNull.Value));
                 parameters.Add(new NpgsqlParameter($"@EventId{index}", entity.EventId ?? (object)DBNull.Value));
