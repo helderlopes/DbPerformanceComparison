@@ -2,6 +2,7 @@
 using DbPerformanceComparison.Repositories.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using SharpCompress.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,17 @@ using System.Threading.Tasks;
 
 namespace DbPerformanceComparison.Repositories.Mongo
 {
-    public class MongoRepository<T> : IRepository<T, string> where T : class
+    public class MongoRepository<T> : IRepository<T> where T : class
     {
         private readonly IMongoCollection<T> _collection;
+
+        private Guid GetEntityId(T entity)
+        {
+            var prop = typeof(T).GetProperty("Id");
+            if (prop == null)
+                throw new InvalidOperationException("Entity does not have an Id property.");
+            return (Guid)prop.GetValue(entity)!;
+        }
 
         public MongoRepository(MongoService mongoService)
         {
@@ -29,9 +38,9 @@ namespace DbPerformanceComparison.Repositories.Mongo
             await _collection.InsertManyAsync(entities);
         }
 
-        public async Task<bool> DeleteAsync(string id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
-            FilterDefinition<T> filter = Builders<T>.Filter.Eq("_id", new ObjectId(id));
+            var filter = Builders<T>.Filter.Eq("Id", id);
             DeleteResult result = await _collection.DeleteOneAsync(filter);
             return result.DeletedCount > 0;
         }
@@ -41,15 +50,16 @@ namespace DbPerformanceComparison.Repositories.Mongo
             return await _collection.Find(Builders<T>.Filter.Empty).ToListAsync();
         }
 
-        public async Task<T?> GetByIdAsync(string id)
+        public async Task<T?> GetByIdAsync(Guid id)
         {
-            FilterDefinition<T> filter = Builders<T>.Filter.Eq("_id", new ObjectId(id));
+            var filter = Builders<T>.Filter.Eq("Id", id);
             return await _collection.Find(filter).FirstOrDefaultAsync();
         }
 
-        public async Task<bool> UpdateAsync(T entity, string id)
+        public async Task<bool> UpdateAsync(T entity)
         {
-            var filter = Builders<T>.Filter.Eq("_id", new ObjectId(id));
+            Guid id = GetEntityId(entity);
+            var filter = Builders<T>.Filter.Eq("Id", id);
             ReplaceOneResult result = await _collection.ReplaceOneAsync(filter, entity);
             return result.ModifiedCount > 0;
         }

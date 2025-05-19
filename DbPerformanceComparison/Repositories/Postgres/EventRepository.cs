@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DbPerformanceComparison.Repositories.Postgres
 {
-    public class EventRepository : IRepository<Event, int>
+    public class EventRepository : IRepository<Event>
     {
         private readonly PostgresService _service;
 
@@ -21,11 +21,12 @@ namespace DbPerformanceComparison.Repositories.Postgres
         public async Task AddAsync(Event entity)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
-            string query =  "INSERT INTO Events (Name, EventTime, Sex, Round, StartListurl, ResultsUrl, SummaryUrl, PointsUrl) " +
-                            "VALUES (@Name, @EventTime, @Sex, @Round, @StartListurl, @ResultsUrl, @SummaryUrl, @PointsUrl) RETURNING Id";
+            string query =  "INSERT INTO Events (Id, Name, EventTime, Sex, Round, StartListurl, ResultsUrl, SummaryUrl, PointsUrl) " +
+                            "VALUES (@Id, @Name, @EventTime, @Sex, @Round, @StartListurl, @ResultsUrl, @SummaryUrl, @PointsUrl) RETURNING Id";
 
             await using NpgsqlCommand command = new(query, connection);
 
+            command.Parameters.AddWithValue("@Id", entity.Id);
             command.Parameters.AddWithValue("@Name", entity.Name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@EventTime", entity.EventTime ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Sex", entity.Sex ?? (object)DBNull.Value);
@@ -35,20 +36,21 @@ namespace DbPerformanceComparison.Repositories.Postgres
             command.Parameters.AddWithValue("@SummaryUrl", entity.SummaryUrl ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@PointsUrl", entity.PointsUrl ?? (object)DBNull.Value);
 
-            entity.Id = Convert.ToInt32(await command.ExecuteScalarAsync());
+            await command.ExecuteScalarAsync();
         }
 
         public async Task AddManyAsync(IEnumerable<Event> entities)
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
-            StringBuilder queryBuilder = new("INSERT INTO Events (Name, EventTime, Sex, Round, StartListurl, ResultsUrl, SummaryUrl, PointsUrl) VALUES ");
+            StringBuilder queryBuilder = new("INSERT INTO Events (Id, Name, EventTime, Sex, Round, StartListurl, ResultsUrl, SummaryUrl, PointsUrl) VALUES ");
             List<NpgsqlParameter> parameters = new();
             int index = 0;
 
             foreach (var entity in entities)
             {
-                queryBuilder.Append($"(@Name{index}, @EventTime{index}, @Sex{index}, @Round{index}, @StartListurl{index}, @ResultsUrl{index}, @SummaryUrl{index}, @PointsUrl{index}),");
+                queryBuilder.Append($"(@Id{index}, @Name{index}, @EventTime{index}, @Sex{index}, @Round{index}, @StartListurl{index}, @ResultsUrl{index}, @SummaryUrl{index}, @PointsUrl{index}),");
+                parameters.Add(new NpgsqlParameter($"@Id{index}", entity.Id));
                 parameters.Add(new NpgsqlParameter($"@Name{index}", entity.Name ?? (object)DBNull.Value));
                 parameters.Add(new NpgsqlParameter($"@EventTime{index}", entity.EventTime ?? (object)DBNull.Value));
                 parameters.Add(new NpgsqlParameter($"@Sex{index}", entity.Sex ?? (object)DBNull.Value));
@@ -68,7 +70,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
 
@@ -97,7 +99,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             {
                 events.Add(new Event
                 {
-                    Id = reader.GetInt32(0),
+                    Id = reader.GetGuid(0),
                     Name = reader.IsDBNull(1) ? null : reader.GetString(1),
                     EventTime = reader.IsDBNull(2) ? null : reader.GetTimeSpan(2),
                     Sex = reader.IsDBNull(3) ? null : reader.GetString(3),
@@ -112,7 +114,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             return events;
         }
 
-        public async Task<Event?> GetByIdAsync(int id)
+        public async Task<Event?> GetByIdAsync(Guid id)
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
@@ -142,7 +144,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             return null;
         }
 
-        public async Task<bool> UpdateAsync(Event entity, int id)
+        public async Task<bool> UpdateAsync(Event entity)
         {
             if (entity is null)
             {
@@ -156,7 +158,6 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
             await using NpgsqlCommand command = new(query, connection);
 
-            command.Parameters.AddWithValue("@Id", id);
             command.Parameters.AddWithValue("@Name", entity.Name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@EventTime", entity.EventTime ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Sex", entity.Sex ?? (object)DBNull.Value);
@@ -165,6 +166,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             command.Parameters.AddWithValue("@ResultsUrl", entity.ResultsUrl ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@SummaryUrl", entity.SummaryUrl ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@PointsUrl", entity.PointsUrl ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Id", entity.Id);
 
             return await command.ExecuteNonQueryAsync() > 0;
         }

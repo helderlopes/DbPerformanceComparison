@@ -1,10 +1,10 @@
 public class Result
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public Athlete? Athlete { get; set; }
-    public int? AthleteId { get; set; }
+    public Guid? AthleteId { get; set; }
     public Event? Event { get; set; }
-    public int? EventId { get; set; }
+    public Guid? EventId { get; set; }
     public int? Position { get; set; }
     public int? Bib { get; set; }
     public TimeSpan? Mark { get; set; }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DbPerformanceComparison.Repositories.Postgres
 {
-    public class AthleteRepository : IRepository<Athlete, int>
+    public class AthleteRepository : IRepository<Athlete>
     {
         private readonly PostgresService _service;
 
@@ -13,31 +13,34 @@ namespace DbPerformanceComparison.Repositories.Postgres
         {
             _service = service;
         }
+
         public async Task AddAsync(Athlete entity)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
-            string query = "INSERT INTO Athletes (Name, Sex, Country) VALUES (@Name, @Sex, @Country) RETURNING Id";
+            string query = "INSERT INTO Athletes (Id, Name, Sex, Country) VALUES (@Id, @Name, @Sex, @Country)";
 
             await using NpgsqlCommand command = new(query, connection);
 
+            command.Parameters.AddWithValue("@Id", entity.Id);
             command.Parameters.AddWithValue("@Name", entity.Name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Sex", entity.Sex ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Country", entity.Country ?? (object)DBNull.Value);
 
-            entity.Id = Convert.ToInt32(await command.ExecuteScalarAsync());
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task AddManyAsync(IEnumerable<Athlete> entities)
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
-            StringBuilder queryBuilder = new("INSERT INTO Athletes (Name, Sex, Country) VALUES ");
+            StringBuilder queryBuilder = new("INSERT INTO Athletes (Id, Name, Sex, Country) VALUES ");
             List<NpgsqlParameter> parameters = new();
             int index = 0;
 
             foreach (var entity in entities)
             {
-                queryBuilder.Append($"(@Name{index}, @Sex{index}, @Country{index}),");
+                queryBuilder.Append($"(@Id{index}, @Name{index}, @Sex{index}, @Country{index}),");
+                parameters.Add(new NpgsqlParameter($"@Id{index}", entity.Id));
                 parameters.Add(new NpgsqlParameter($"@Name{index}", entity.Name ?? (object)DBNull.Value));
                 parameters.Add(new NpgsqlParameter($"@Sex{index}", entity.Sex ?? (object)DBNull.Value));
                 parameters.Add(new NpgsqlParameter($"@Country{index}", entity.Country ?? (object)DBNull.Value));
@@ -52,7 +55,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
@@ -81,7 +84,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             {
                 athletes.Add(new Athlete
                 {
-                    Id = reader.GetInt32(0),
+                    Id = reader.GetGuid(0),
                     Name = reader.IsDBNull(1) ? null : reader.GetString(1),
                     Sex = reader.IsDBNull(2) ? null : reader.GetString(2),
                     Country = reader.IsDBNull(3) ? null : reader.GetString(3)
@@ -91,11 +94,11 @@ namespace DbPerformanceComparison.Repositories.Postgres
             return athletes;
         }
 
-        public async Task<Athlete?> GetByIdAsync(int id)
+        public async Task<Athlete?> GetByIdAsync(Guid id)
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
-            string query = "SELECT Name, Sex, Country FROM Athletes WHERE Id = @Id";
+            string query = "SELECT Id, Name, Sex, Country FROM Athletes WHERE Id = @Id";
 
             await using NpgsqlCommand command = new(query, connection);
             command.Parameters.AddWithValue("@Id", id);
@@ -106,17 +109,17 @@ namespace DbPerformanceComparison.Repositories.Postgres
             {
                 return new Athlete
                 {
-                    Id = id,
-                    Name = reader.IsDBNull(0) ? null : reader.GetString(0),
-                    Sex = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    Country = reader.IsDBNull(2) ? null : reader.GetString(2)
+                    Id = reader.GetGuid(0),
+                    Name = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    Sex = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Country = reader.IsDBNull(3) ? null : reader.GetString(3)
                 };
             }
 
             return null;
         }
 
-        public async Task<bool> UpdateAsync(Athlete entity, int id)
+        public async Task<bool> UpdateAsync(Athlete entity)
         {
             if (entity is null)
             {
@@ -129,10 +132,10 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
             await using NpgsqlCommand command = new(query, connection);
 
-            command.Parameters.AddWithValue("@Id", id);
             command.Parameters.AddWithValue("@Name", entity.Name ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Sex", entity.Sex ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Country", entity.Country ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@Id", entity.Id);
 
             return await command.ExecuteNonQueryAsync() > 0;
         }

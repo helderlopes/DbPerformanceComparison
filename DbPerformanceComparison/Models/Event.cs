@@ -1,6 +1,6 @@
 public class Event
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string? Name { get; set; }
     public TimeSpan? EventTime { get; set; }
     public string? Sex { get; set; }

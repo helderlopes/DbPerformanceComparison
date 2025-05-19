@@ -1,4 +1,7 @@
-﻿using DbPerformanceComparison.Infrastructure.Postgres;
+﻿using DbPerformanceComparison.Infrastructure.Mongo;
+using DbPerformanceComparison.Infrastructure.Postgres;
+using DbPerformanceComparison.Repositories.Interfaces;
+using DbPerformanceComparison.Repositories.Mongo;
 using DbPerformanceComparison.Repositories.Postgres;
 using DbPerformanceComparison.Services.ConfigurationBuilder;
 using DbPerformanceComparison.Services.Parser;
@@ -40,21 +43,6 @@ namespace DbPerformanceComparison
             return (await eventRepository.GetAllAsync()).ToList();
         }
 
-        static void MapResultReferences(List<Result> results, List<Athlete> athletes, List<Event> events)
-        {
-            foreach (var result in results)
-            {
-                if (result.Athlete != null)
-                {
-                    result.AthleteId = athletes.FirstOrDefault(a => a.Name == result.Athlete.Name && a.Country == result.Athlete.Country)?.Id;
-                }
-                if (result.Event != null)
-                {
-                    result.EventId = events.FirstOrDefault(e => e.Name == result.Event.Name)?.Id;
-                }
-            }
-        }
-
         static async Task<List<Result>> SeedResultsAsync(PostgresService postgresService, List<Result> results)
         {
             ResultRepository resultRepository = new(postgresService);
@@ -63,6 +51,8 @@ namespace DbPerformanceComparison
 
             return (await resultRepository.GetAllAsync()).ToList();
         }
+
+
 
         static async Task Main(string[] args)
         {
@@ -79,10 +69,20 @@ namespace DbPerformanceComparison
 
                 athletes = await SeedAthletesAsync(postgresService, athletes);
                 events = await SeedEventsAsync(postgresService, events);
-
-                MapResultReferences(results, athletes, events);
-
                 results = await SeedResultsAsync(postgresService, results);
+
+                string mongoConnectionString = configurationBuilderService.GetMongoConnectionString();
+                string mongoDatabaseName = configurationBuilderService.GetMongoDatabaseName();
+
+                MongoService mongoService = new(mongoConnectionString, mongoDatabaseName);
+
+                MongoRepository<Athlete> mongoAthleteRepository = new(mongoService);
+                MongoRepository<Result> mongoResultRepository = new(mongoService);
+                MongoRepository<Event> mongoEventRepository = new(mongoService);
+
+                await mongoAthleteRepository.AddManyAsync(athletes);
+                await mongoResultRepository.AddManyAsync(results);
+                await mongoEventRepository.AddManyAsync(events);
             }
             catch (Exception ex)
             {

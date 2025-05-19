@@ -40,6 +40,7 @@ namespace DbPerformanceComparison.Services.Parser
                 {
                     athlete = new Athlete
                     {
+                        Id = Guid.NewGuid(),
                         Name = name,
                         Country = country,
                         Sex = sex
@@ -64,10 +65,11 @@ namespace DbPerformanceComparison.Services.Parser
 
                 Result result = new Result
                 {
+                    Id = Guid.NewGuid(),
                     Athlete = athlete,
-                    AthleteId = athlete.Id,
+                    AthleteId = athlete.Id, 
                     Event = currentEvent,
-                    EventId = currentEvent.Id,
+                    EventId = currentEvent.Id, 
                     Position = TryParseDoubleAsInt("pos"),
                     Bib = TryParseDoubleAsInt("bib"),
                     Mark = TryParseTime("mark")

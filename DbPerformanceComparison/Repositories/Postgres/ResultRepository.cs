@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DbPerformanceComparison.Repositories.Postgres
 {
-    public class ResultRepository : IRepository<Result, int>
+    public class ResultRepository : IRepository<Result>
     {
         private readonly PostgresService _service;
 
@@ -22,22 +22,21 @@ namespace DbPerformanceComparison.Repositories.Postgres
         public async Task AddAsync(Result entity)
         {
             NpgsqlConnection connection = await _service.GetConnectionAsync();
-            string query =  "INSERT INTO Results (AthleteId, EventId, Position, Bib, Mark) " +
-                            "VALUES (@AthleteId, @EventId, @Position, @Bib, @Mark) RETURNING Id";
+            string query =  "INSERT INTO Results (@Id, AthleteId, EventId, Position, Bib, Mark) " +
+                            "VALUES (@AthleteId, @EventId, @Position, @Bib, @Mark)";
 
             await using NpgsqlCommand command = new(query, connection);
 
+            command.Parameters.AddWithValue("@Id", entity.Id);
             command.Parameters.AddWithValue("@AthleteId", entity.AthleteId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@EventId", entity.EventId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Position", entity.Position ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Bib", entity.Bib ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Mark", entity.Mark ?? (object)DBNull.Value);
 
-            entity.Id = -1;
-
             try
             {
-                entity.Id = Convert.ToInt32(await command.ExecuteScalarAsync());
+                await command.ExecuteScalarAsync();
             }
             catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
             {
@@ -49,13 +48,14 @@ namespace DbPerformanceComparison.Repositories.Postgres
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
-            StringBuilder queryBuilder = new("INSERT INTO Results (AthleteId, EventId, Position, Bib, Mark) VALUES ");
+            StringBuilder queryBuilder = new("INSERT INTO Results (@Id, AthleteId, EventId, Position, Bib, Mark) VALUES ");
             List<NpgsqlParameter> parameters = new();
             int index = 0;
 
             foreach (var entity in entities)
             {
                 queryBuilder.Append($"(@AthleteId{index}, @EventId{index}, @Position{index}, @Bib{index}, @Mark{index}),");
+                parameters.Add(new NpgsqlParameter($"@Id{index}", entity.Id));
                 parameters.Add(new NpgsqlParameter($"@AthleteId{index}", entity.AthleteId ?? (object)DBNull.Value));
                 parameters.Add(new NpgsqlParameter($"@EventId{index}", entity.EventId ?? (object)DBNull.Value));
                 parameters.Add(new NpgsqlParameter($"@Position{index}", entity.Position ?? (object)DBNull.Value));
@@ -80,7 +80,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             }
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
@@ -109,9 +109,9 @@ namespace DbPerformanceComparison.Repositories.Postgres
             {
                 results.Add(new Result
                 {
-                    Id = reader.GetInt32(0),
-                    AthleteId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
-                    EventId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    Id = reader.GetGuid(0),
+                    AthleteId = reader.IsDBNull(1) ? null : reader.GetGuid(1),
+                    EventId = reader.IsDBNull(2) ? null : reader.GetGuid(2),
                     Position = reader.IsDBNull(3) ? null : reader.GetInt32(3),
                     Bib = reader.IsDBNull(4) ? null : reader.GetInt32(4),
                     Mark = reader.IsDBNull(5) ? null : reader.GetTimeSpan(5)
@@ -121,7 +121,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             return results;
         }
 
-        public async Task<Result?> GetByIdAsync(int id)
+        public async Task<Result?> GetByIdAsync(Guid id)
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
@@ -137,8 +137,8 @@ namespace DbPerformanceComparison.Repositories.Postgres
                 return new Result
                 {
                     Id = id,
-                    AthleteId = reader.IsDBNull(0) ? null : reader.GetInt32(0),
-                    EventId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                    AthleteId = reader.IsDBNull(0) ? null : reader.GetGuid(0),
+                    EventId = reader.IsDBNull(1) ? null : reader.GetGuid(1),
                     Position = reader.IsDBNull(2) ? null : reader.GetInt32(2),
                     Bib = reader.IsDBNull(3) ? null : reader.GetInt32(3),
                     Mark = reader.IsDBNull(4) ? null : reader.GetTimeSpan(4)
@@ -148,7 +148,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
             return null;
         }
 
-        public async Task<bool> UpdateAsync(Result entity, int id)
+        public async Task<bool> UpdateAsync(Result entity)
         {
             if (entity is null)
             {
@@ -161,7 +161,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
             await using NpgsqlCommand command = new(query, connection);
 
-            command.Parameters.AddWithValue("@Id", id);
+            command.Parameters.AddWithValue("@Id", entity.Id);
             command.Parameters.AddWithValue("@AthleteId", entity.AthleteId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@EventId", entity.EventId ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@Position", entity.Position ?? (object)DBNull.Value);
