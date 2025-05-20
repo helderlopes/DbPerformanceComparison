@@ -9,8 +9,10 @@ public class Result
     [Column("Id")]
     public Guid Id { get; set; }
     public Athlete? Athlete { get; set; }
+    [BsonRepresentation(BsonType.String)]
     public Guid? AthleteId { get; set; }
     public Event? Event { get; set; }
+    [BsonRepresentation(BsonType.String)]
     public Guid? EventId { get; set; }
     public int? Position { get; set; }
     public int? Bib { get; set; }

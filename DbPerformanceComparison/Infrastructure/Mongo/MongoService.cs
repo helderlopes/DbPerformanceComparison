@@ -13,10 +13,14 @@ namespace DbPerformanceComparison.Infrastructure.Mongo
     {
         private readonly IMongoDatabase _database;
 
-        public MongoService(string connectionString, string databaseName)
+        public MongoService(string connectionString, string databaseName, bool dropCollections = false)
         {
             MongoClient client = new(connectionString);
             _database = client.GetDatabase(databaseName);
+            if (dropCollections)
+            {
+                client.DropDatabase(databaseName);
+            }
         }
 
         public IMongoCollection<T> GetCollection<T>()
