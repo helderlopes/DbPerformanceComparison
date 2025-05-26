@@ -7,6 +7,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
 {
     public class AthleteRepository : IRepository<Athlete>
     {
+        public string DatabaseName => "PostgreSQL";
         private readonly PostgresService _service;
 
         public AthleteRepository(PostgresService service)

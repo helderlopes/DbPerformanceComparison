@@ -13,6 +13,7 @@ namespace DbPerformanceComparison.Repositories.Mongo
 {
     public class MongoRepository<T> : IRepository<T> where T : class
     {
+        public string DatabaseName => "MongoDB";
         private readonly IMongoCollection<T> _collection;
 
         private Guid GetEntityId(T entity)

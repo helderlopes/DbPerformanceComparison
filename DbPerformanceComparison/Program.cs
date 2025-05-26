@@ -1,5 +1,6 @@
 ﻿using DbPerformanceComparison.Infrastructure.Mongo;
 using DbPerformanceComparison.Infrastructure.Postgres;
+using DbPerformanceComparison.Monitoring;
 using DbPerformanceComparison.Repositories.Interfaces;
 using DbPerformanceComparison.Repositories.Mongo;
 using DbPerformanceComparison.Repositories.Postgres;
@@ -7,6 +8,7 @@ using DbPerformanceComparison.Services.ConfigurationBuilder;
 using DbPerformanceComparison.Services.Parser;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace DbPerformanceComparison
 {
@@ -44,13 +46,13 @@ namespace DbPerformanceComparison
                 EventRepository postgresEventRepository = new(postgresService);
                 ResultRepository postgresResultRepository = new(postgresService);
 
-                await postgresAthleteRepository.AddManyAsync(athletes);
-                await postgresEventRepository.AddManyAsync(events);
-                await postgresResultRepository.AddManyAsync(results);
+                //await postgresAthleteRepository.AddManyAsync(athletes);
+                //await postgresEventRepository.AddManyAsync(events);
+                //await postgresResultRepository.AddManyAsync(results);
 
-                athletes = (await postgresAthleteRepository.GetAllAsync()).ToList();
-                events = (await postgresEventRepository.GetAllAsync()).ToList();
-                results = (await postgresResultRepository.GetAllAsync()).ToList();
+                //athletes = (await postgresAthleteRepository.GetAllAsync()).ToList();
+                //events = (await postgresEventRepository.GetAllAsync()).ToList();
+                //results = (await postgresResultRepository.GetAllAsync()).ToList();
 
                 //MONGO DB
                 string mongoConnectionString = configurationBuilderService.GetMongoConnectionString();
@@ -62,13 +64,24 @@ namespace DbPerformanceComparison
                 MongoRepository<Result> mongoResultRepository = new(mongoService);
                 MongoRepository<Event> mongoEventRepository = new(mongoService);
 
-                await mongoAthleteRepository.AddManyAsync(athletes);
-                await mongoEventRepository.AddManyAsync(events);
-                await mongoResultRepository.AddManyAsync(results);
+                //await mongoAthleteRepository.AddManyAsync(athletes);
+                //await mongoEventRepository.AddManyAsync(events);
+                //await mongoResultRepository.AddManyAsync(results);
 
-                athletes = (await mongoAthleteRepository.GetAllAsync()).ToList();
-                events = (await mongoEventRepository.GetAllAsync()).ToList();
-                results = (await mongoResultRepository.GetAllAsync()).ToList();
+                //athletes = (await mongoAthleteRepository.GetAllAsync()).ToList();
+                //events = (await mongoEventRepository.GetAllAsync()).ToList();
+                //results = (await mongoResultRepository.GetAllAsync()).ToList();
+
+                PerformanceMonitor performanceMonitor = new();
+
+                await performanceMonitor.MeasureAddManyAsync(postgresAthleteRepository, athletes, postgresAthleteRepository.AddManyAsync);
+                await performanceMonitor.MeasureAddManyAsync(mongoAthleteRepository, athletes, mongoAthleteRepository.AddManyAsync);
+                
+                await performanceMonitor.MeasureAddManyAsync(postgresEventRepository, events, postgresEventRepository.AddManyAsync);
+                await performanceMonitor.MeasureAddManyAsync(mongoEventRepository, events, mongoEventRepository.AddManyAsync);
+                
+                await performanceMonitor.MeasureAddManyAsync(postgresResultRepository, results, postgresResultRepository.AddManyAsync);
+                await performanceMonitor.MeasureAddManyAsync(mongoResultRepository, results, mongoResultRepository.AddManyAsync);
             }
             catch (Exception ex)
             {

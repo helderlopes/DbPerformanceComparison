@@ -11,6 +11,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
 {
     public class EventRepository : IRepository<Event>
     {
+        public string DatabaseName => "PostgreSQL";
         private readonly PostgresService _service;
 
         public EventRepository(PostgresService service)

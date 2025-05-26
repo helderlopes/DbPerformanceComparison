@@ -8,6 +8,7 @@ namespace DbPerformanceComparison.Repositories.Interfaces
 {
     public interface IRepository<T> where T : class
     {
+        string DatabaseName { get; }
         Task AddAsync(T entity);
         Task AddManyAsync(IEnumerable<T> entities);
         Task<T?> GetByIdAsync(Guid id);

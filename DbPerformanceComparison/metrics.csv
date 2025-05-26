@@ -1,0 +1,4 @@
+Operation,Database,ElapsedMs,EntityType,EntityCount,Date
+AddManyAsync,PostgreSQL,83,Athlete,1728,2025-05-26T22:15:52.2360444Z
+AddManyAsync,PostgreSQL,17,Event,139,2025-05-26T22:16:07.0435659Z
+AddManyAsync,PostgreSQL,123,Result,3550,2025-05-26T22:16:10.7423552Z

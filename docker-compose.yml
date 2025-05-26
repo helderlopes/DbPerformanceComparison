@@ -12,8 +12,11 @@ services:
       - POSTGRES__PASSWORD=mypassword
     depends_on:
       - postgres
+      - mongodb
     ports:
       - "80:80"
+    volumes:
+      - ./output:/app/output
 
   postgres:
     image: postgres:15
