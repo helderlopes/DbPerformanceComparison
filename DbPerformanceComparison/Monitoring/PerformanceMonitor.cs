@@ -12,14 +12,60 @@ namespace DbPerformanceComparison.Monitoring
     {
         private static readonly MetricLogger MetricLogger = new(true);
 
-        public async Task<T> MeasureAddAsync<T>(
+        public async Task MeasureAddAsync<T>(
            IRepository<T> repository,
            T entity,
-           Func<T, Task<T>> action) where T : class
+           Func<T, Task> action) where T : class
         {
             var stopwatch = Stopwatch.StartNew();
 
-            T result = await action(entity);
+            await action(entity);
+
+            stopwatch.Stop();
+
+            var metric = new MetricResult
+            {
+                Operation = action.Method.Name,
+                Database = repository.DatabaseName,
+                EntityType = typeof(T).Name,
+                EntityCount = 1,
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+            };
+
+            MetricLogger.Log(metric);
+        }
+
+        public async Task MeasureAddManyAsync<T>(
+           IRepository<T> repository,
+           IEnumerable<T> entities,
+           Func<IEnumerable<T>, Task> action) where T : class
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            await action(entities);
+
+            stopwatch.Stop();
+
+            var metric = new MetricResult
+            {
+                Operation = action.Method.Name,
+                Database = repository.DatabaseName,
+                EntityType = typeof(T).Name,
+                EntityCount = entities.Count(),
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+            };
+
+            MetricLogger.Log(metric);
+        }
+
+        public async Task<T?> MeasureGetByIdAsync<T>(
+           IRepository<T> repository,
+           Guid id,
+           Func<Guid, Task<T?>> action) where T : class
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            T? result = await action(id);
 
             stopwatch.Stop();
 
@@ -36,14 +82,13 @@ namespace DbPerformanceComparison.Monitoring
             return result;
         }
 
-        public async Task<IEnumerable<T>> MeasureAddManyAsync<T>(
+        public async Task<IEnumerable<T>?> MeasureGetAllAsync<T>(
            IRepository<T> repository,
-           IEnumerable<T> entities,
-           Func<IEnumerable<T>, Task<IEnumerable<T>>> action) where T : class
+           Func<Task<IEnumerable<T>?>> action) where T : class
         {
             var stopwatch = Stopwatch.StartNew();
 
-            IEnumerable<T> result = await action(entities);
+            IEnumerable<T>? result = await action();
 
             stopwatch.Stop();
 
@@ -52,7 +97,7 @@ namespace DbPerformanceComparison.Monitoring
                 Operation = action.Method.Name,
                 Database = repository.DatabaseName,
                 EntityType = typeof(T).Name,
-                EntityCount = entities.Count(),
+                EntityCount = result?.Count() ?? 0,
                 ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
             };
 
@@ -60,14 +105,38 @@ namespace DbPerformanceComparison.Monitoring
             return result;
         }
 
-        public async Task<T?> MeasureGetByIdAsync<T>(
+        public async Task<bool> MeasureUpdateAsync<T>(
            IRepository<T> repository,
-           Guid id,
-           Func<Guid, Task<T?>> action) where T : class
+           T entity,
+           Func<T, Task<bool>> action) where T : class
         {
             var stopwatch = Stopwatch.StartNew();
 
-            T? result = await action(id);
+            bool result = await action(entity);
+
+            stopwatch.Stop();
+
+            var metric = new MetricResult
+            {
+                Operation = action.Method.Name,
+                Database = repository.DatabaseName,
+                EntityType = typeof(T).Name,
+                EntityCount = 1,
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+            };
+
+            MetricLogger.Log(metric);
+            return result;
+        }
+
+        public async Task<bool> MeasureDeleteAsync<T>(
+           IRepository<T> repository,
+           Guid id,
+           Func<Guid, Task<bool>> action) where T : class
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            bool result = await action(id);
 
             stopwatch.Stop();
 
