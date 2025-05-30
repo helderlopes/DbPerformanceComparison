@@ -126,7 +126,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
-            string query = "SELECT Id, AthleteId, EventId, Position, Bib, Mark FROM Results WHERE Id = @Id";
+            string query = "SELECT AthleteId, EventId, Position, Bib, Mark FROM Results WHERE Id = @Id";
 
             await using NpgsqlCommand command = new(query, connection);
             command.Parameters.AddWithValue("@Id", id);

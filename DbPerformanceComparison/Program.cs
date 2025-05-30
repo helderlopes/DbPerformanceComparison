@@ -46,14 +46,6 @@ namespace DbPerformanceComparison
                 EventRepository postgresEventRepository = new(postgresService);
                 ResultRepository postgresResultRepository = new(postgresService);
 
-                //await postgresAthleteRepository.AddManyAsync(athletes);
-                //await postgresEventRepository.AddManyAsync(events);
-                //await postgresResultRepository.AddManyAsync(results);
-
-                //athletes = (await postgresAthleteRepository.GetAllAsync()).ToList();
-                //events = (await postgresEventRepository.GetAllAsync()).ToList();
-                //results = (await postgresResultRepository.GetAllAsync()).ToList();
-
                 //MONGO DB
                 string mongoConnectionString = configurationBuilderService.GetMongoConnectionString();
                 string mongoDatabaseName = configurationBuilderService.GetMongoDatabaseName();
@@ -64,24 +56,21 @@ namespace DbPerformanceComparison
                 MongoRepository<Result> mongoResultRepository = new(mongoService);
                 MongoRepository<Event> mongoEventRepository = new(mongoService);
 
-                //await mongoAthleteRepository.AddManyAsync(athletes);
-                //await mongoEventRepository.AddManyAsync(events);
-                //await mongoResultRepository.AddManyAsync(results);
-
-                //athletes = (await mongoAthleteRepository.GetAllAsync()).ToList();
-                //events = (await mongoEventRepository.GetAllAsync()).ToList();
-                //results = (await mongoResultRepository.GetAllAsync()).ToList();
-
                 PerformanceMonitor performanceMonitor = new();
 
                 await performanceMonitor.MeasureAddManyAsync(postgresAthleteRepository, athletes, postgresAthleteRepository.AddManyAsync);
                 await performanceMonitor.MeasureAddManyAsync(mongoAthleteRepository, athletes, mongoAthleteRepository.AddManyAsync);
-                
                 await performanceMonitor.MeasureAddManyAsync(postgresEventRepository, events, postgresEventRepository.AddManyAsync);
                 await performanceMonitor.MeasureAddManyAsync(mongoEventRepository, events, mongoEventRepository.AddManyAsync);
-                
                 await performanceMonitor.MeasureAddManyAsync(postgresResultRepository, results, postgresResultRepository.AddManyAsync);
                 await performanceMonitor.MeasureAddManyAsync(mongoResultRepository, results, mongoResultRepository.AddManyAsync);
+
+                var athlete = await performanceMonitor.MeasureGetByIdAsync(postgresAthleteRepository, athletes.First().Id, postgresAthleteRepository.GetByIdAsync);
+                athlete = await performanceMonitor.MeasureGetByIdAsync(mongoAthleteRepository, athletes.First().Id, mongoAthleteRepository.GetByIdAsync);
+                var firstEvent = await performanceMonitor.MeasureGetByIdAsync(postgresEventRepository, events.First().Id, postgresEventRepository.GetByIdAsync);
+                firstEvent = await performanceMonitor.MeasureGetByIdAsync(mongoEventRepository, events.First().Id, mongoEventRepository.GetByIdAsync);
+                var result = await performanceMonitor.MeasureGetByIdAsync(postgresResultRepository, results.First().Id, postgresResultRepository.GetByIdAsync);
+                result = await performanceMonitor.MeasureGetByIdAsync(mongoResultRepository, results.First().Id, mongoResultRepository.GetByIdAsync);
             }
             catch (Exception ex)
             {

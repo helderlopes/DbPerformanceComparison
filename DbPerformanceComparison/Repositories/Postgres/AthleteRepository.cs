@@ -99,7 +99,7 @@ namespace DbPerformanceComparison.Repositories.Postgres
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
 
-            string query = "SELECT Id, Name, Sex, Country FROM Athletes WHERE Id = @Id";
+            string query = "SELECT Name, Sex, Country FROM Athletes WHERE Id = @Id";
 
             await using NpgsqlCommand command = new(query, connection);
             command.Parameters.AddWithValue("@Id", id);
@@ -110,10 +110,10 @@ namespace DbPerformanceComparison.Repositories.Postgres
             {
                 return new Athlete
                 {
-                    Id = reader.GetGuid(0),
-                    Name = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    Sex = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    Country = reader.IsDBNull(3) ? null : reader.GetString(3)
+                    Id = id,
+                    Name = reader.IsDBNull(0) ? null : reader.GetString(0),
+                    Sex = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    Country = reader.IsDBNull(2) ? null : reader.GetString(2)
                 };
             }
 
