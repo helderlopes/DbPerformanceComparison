@@ -19,17 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Input\" />
+    <Content Include="Input\**\*">
+  	<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  	<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Input\events.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Input\results.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
