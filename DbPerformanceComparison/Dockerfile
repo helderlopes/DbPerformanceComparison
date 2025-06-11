@@ -5,7 +5,6 @@ FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
 USER $APP_UID
 WORKDIR /app
 
-
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -13,6 +12,7 @@ WORKDIR /src
 COPY ["DbPerformanceComparison/DbPerformanceComparison.csproj", "DbPerformanceComparison/"]
 RUN dotnet restore "./DbPerformanceComparison/DbPerformanceComparison.csproj"
 COPY . .
+COPY DbPerformanceComparison/Input /src/DbPerformanceComparison/Input
 WORKDIR "/src/DbPerformanceComparison"
 RUN dotnet build "./DbPerformanceComparison.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
@@ -21,11 +21,9 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./DbPerformanceComparison.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-# Copy input data to the publish directory
-COPY Input /app/Input
-
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY --from=build /src/DbPerformanceComparison/Input /app/Input
 ENTRYPOINT ["dotnet", "DbPerformanceComparison.dll"]
