@@ -79,16 +79,16 @@ namespace DbPerformanceComparison.Monitoring
             };
 
             MetricLogger.Log(metric);
-            return result;
+            return result ?? default;
         }
 
-        public async Task<IEnumerable<T>?> MeasureGetAllAsync<T>(
+        public async Task<IEnumerable<T>> MeasureGetAllAsync<T>(
            IRepository<T> repository,
-           Func<Task<IEnumerable<T>?>> action) where T : class
+           Func<Task<IEnumerable<T>>> action) where T : class
         {
             var stopwatch = Stopwatch.StartNew();
 
-            IEnumerable<T>? result = await action();
+            IEnumerable<T> result = await action();
 
             stopwatch.Stop();
 
@@ -102,7 +102,7 @@ namespace DbPerformanceComparison.Monitoring
             };
 
             MetricLogger.Log(metric);
-            return result;
+            return result ?? Enumerable.Empty<T>();
         }
 
         public async Task<bool> MeasureUpdateAsync<T>(

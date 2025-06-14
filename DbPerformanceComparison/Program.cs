@@ -71,6 +71,27 @@ namespace DbPerformanceComparison
                 firstEvent = await performanceMonitor.MeasureGetByIdAsync(mongoEventRepository, events.First().Id, mongoEventRepository.GetByIdAsync);
                 var result = await performanceMonitor.MeasureGetByIdAsync(postgresResultRepository, results.First().Id, postgresResultRepository.GetByIdAsync);
                 result = await performanceMonitor.MeasureGetByIdAsync(mongoResultRepository, results.First().Id, mongoResultRepository.GetByIdAsync);
+
+                athletes = (await performanceMonitor.MeasureGetAllAsync(postgresAthleteRepository, postgresAthleteRepository.GetAllAsync))?.ToList() ?? new List<Athlete>();
+                athletes = (await performanceMonitor.MeasureGetAllAsync(mongoAthleteRepository, mongoAthleteRepository.GetAllAsync))?.ToList() ?? new List<Athlete>();
+                events = (await performanceMonitor.MeasureGetAllAsync(postgresEventRepository, postgresEventRepository.GetAllAsync))?.ToList() ?? new List<Event>();
+                events = (await performanceMonitor.MeasureGetAllAsync(mongoEventRepository, mongoEventRepository.GetAllAsync))?.ToList() ?? new List<Event>();
+                results = (await performanceMonitor.MeasureGetAllAsync(postgresResultRepository, postgresResultRepository.GetAllAsync))?.ToList() ?? new List<Result>();
+                results = (await performanceMonitor.MeasureGetAllAsync(mongoResultRepository, mongoResultRepository.GetAllAsync))?.ToList() ?? new List<Result>();
+
+                bool res = await performanceMonitor.MeasureUpdateAsync(postgresAthleteRepository, athletes.First(), postgresAthleteRepository.UpdateAsync);
+                res = await performanceMonitor.MeasureUpdateAsync(mongoAthleteRepository, athletes.First(), mongoAthleteRepository.UpdateAsync);
+                res = await performanceMonitor.MeasureUpdateAsync(postgresEventRepository, events.First(), postgresEventRepository.UpdateAsync);
+                res = await performanceMonitor.MeasureUpdateAsync(mongoEventRepository, events.First(), mongoEventRepository.UpdateAsync);
+                res = await performanceMonitor.MeasureUpdateAsync(postgresResultRepository, results.First(), postgresResultRepository.UpdateAsync);
+                res = await performanceMonitor.MeasureUpdateAsync(mongoResultRepository, results.First(), mongoResultRepository.UpdateAsync);
+
+                res = await performanceMonitor.MeasureDeleteAsync(postgresAthleteRepository, athletes.First().Id, postgresAthleteRepository.DeleteAsync);
+                res = await performanceMonitor.MeasureDeleteAsync(mongoAthleteRepository, athletes.First().Id, mongoAthleteRepository.DeleteAsync);
+                res = await performanceMonitor.MeasureDeleteAsync(postgresEventRepository, events.First().Id, postgresEventRepository.DeleteAsync);
+                res = await performanceMonitor.MeasureDeleteAsync(mongoEventRepository, events.First().Id, mongoEventRepository.DeleteAsync);
+                res = await performanceMonitor.MeasureDeleteAsync(postgresResultRepository, results.First().Id, postgresResultRepository.DeleteAsync);
+                res = await performanceMonitor.MeasureDeleteAsync(mongoResultRepository, results.First().Id, mongoResultRepository.DeleteAsync);
             }
             catch (Exception ex)
             {
