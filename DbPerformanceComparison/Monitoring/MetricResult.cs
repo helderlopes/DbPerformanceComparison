@@ -13,11 +13,10 @@ namespace DbPerformanceComparison.Monitoring
         public long ElapsedUs { get; set; }
         public string EntityType { get; set; } = string.Empty;
         public int EntityCount { get; set; }
-        public DateTime Date { get; set; } = DateTime.UtcNow;
         
         public override string ToString()
         {
-            return $"{Operation},{Database},{ElapsedUs},{EntityType},{EntityCount},{Date:o}";
+            return $"{Operation},{Database},{ElapsedUs},{EntityType},{EntityCount}";
         }
     }
 }
