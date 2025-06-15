@@ -175,8 +175,11 @@ namespace DbPerformanceComparison.Repositories.Postgres
         public async Task<int> DeleteAllAsync()
         {
             await using NpgsqlConnection connection = await _service.GetConnectionAsync();
+
             string query = "DELETE FROM Events";
+
             await using NpgsqlCommand command = new(query, connection);
+
             return await command.ExecuteNonQueryAsync();
         }
     }

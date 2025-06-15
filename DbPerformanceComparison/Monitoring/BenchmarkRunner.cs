@@ -158,19 +158,19 @@ namespace DbPerformanceComparison.Monitoring
                 _ = await _performanceMonitor.MeasureUpdateAsync(_postgresResultRepository, _results.First(), _postgresResultRepository.UpdateAsync);
                 _ = await _performanceMonitor.MeasureUpdateAsync(_mongoResultRepository, _results.First(), _mongoResultRepository.UpdateAsync);
 
+                _ = await _performanceMonitor.MeasureDeleteAsync(_postgresResultRepository, _results.First().Id, _postgresResultRepository.DeleteAsync);
+                _ = await _performanceMonitor.MeasureDeleteAsync(_mongoResultRepository, _results.First().Id, _mongoResultRepository.DeleteAsync);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_postgresAthleteRepository, _athletes.First().Id, _postgresAthleteRepository.DeleteAsync);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_mongoAthleteRepository, _athletes.First().Id, _mongoAthleteRepository.DeleteAsync);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_postgresEventRepository, _events.First().Id, _postgresEventRepository.DeleteAsync);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_mongoEventRepository, _events.First().Id, _mongoEventRepository.DeleteAsync);
-                _ = await _performanceMonitor.MeasureDeleteAsync(_postgresResultRepository, _results.First().Id, _postgresResultRepository.DeleteAsync);
-                _ = await _performanceMonitor.MeasureDeleteAsync(_mongoResultRepository, _results.First().Id, _mongoResultRepository.DeleteAsync);
 
+                _ = await _performanceMonitor.MeasureDeleteAllAsync(_postgresResultRepository, _postgresResultRepository.DeleteAllAsync);
+                _ = await _performanceMonitor.MeasureDeleteAllAsync(_mongoResultRepository, _mongoResultRepository.DeleteAllAsync);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_postgresAthleteRepository, _postgresAthleteRepository.DeleteAllAsync);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_mongoAthleteRepository, _mongoAthleteRepository.DeleteAllAsync);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_postgresEventRepository, _postgresEventRepository.DeleteAllAsync);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_mongoEventRepository, _mongoEventRepository.DeleteAllAsync);
-                _ = await _performanceMonitor.MeasureDeleteAllAsync(_postgresResultRepository, _postgresResultRepository.DeleteAllAsync);
-                _ = await _performanceMonitor.MeasureDeleteAllAsync(_mongoResultRepository, _mongoResultRepository.DeleteAllAsync);
             }
         }
     }
