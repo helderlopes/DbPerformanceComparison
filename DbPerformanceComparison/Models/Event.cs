@@ -16,4 +16,20 @@ public class Event
     public string? ResultsUrl { get; set; }
     public string? SummaryUrl { get; set; }
     public string? PointsUrl { get; set; }
+
+    public Event Clone()
+    {
+        return new Event
+        {
+            Id = this.Id,
+            Name = this.Name,
+            EventTime = this.EventTime,
+            Sex = this.Sex,
+            Round = this.Round,
+            StartListUrl = this.StartListUrl,
+            ResultsUrl = this.ResultsUrl,
+            SummaryUrl = this.SummaryUrl,
+            PointsUrl = this.PointsUrl
+        };
+    }
 }

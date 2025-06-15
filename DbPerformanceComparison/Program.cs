@@ -7,6 +7,8 @@ using DbPerformanceComparison.Repositories.Postgres;
 using DbPerformanceComparison.Services.ConfigurationBuilder;
 using DbPerformanceComparison.Services.Parser;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -26,6 +28,55 @@ namespace DbPerformanceComparison
             (List<Athlete> athletes, List<Result> results) lists = resultParser.Parse(resultsPath, events);
 
             return (events, lists.athletes, lists.results);
+        }
+
+        static public (List<Event> events, List<Athlete> athletes, List<Result> results) EscalateElements(List<Event> events, List<Athlete> athletes, List<Result> results, int scaleFactor = 1)
+        {
+            var allEvents = new List<Event>(events);
+            var allAthletes = new List<Athlete>(athletes);
+            var allResults = new List<Result>(results);
+
+            if (scaleFactor > 1)
+            {
+                for (int s = 1; s < scaleFactor; s++)
+                {
+                    var eventMap = new Dictionary<Guid, Event>();
+                    foreach (var originalEvent in events)
+                    {
+                        var clonedEvent = originalEvent.Clone();
+                        clonedEvent.Id = Guid.NewGuid();
+                        eventMap[originalEvent.Id] = clonedEvent;
+                        allEvents.Add(clonedEvent);
+                    }
+
+                    var athleteMap = new Dictionary<Guid, Athlete>();
+                    foreach (var originalAthlete in athletes)
+                    {
+                        var clonedAthlete = originalAthlete.Clone();
+                        clonedAthlete.Id = Guid.NewGuid();
+                        athleteMap[originalAthlete.Id] = clonedAthlete;
+                        allAthletes.Add(clonedAthlete);
+                    }
+
+                    foreach (var originalResult in results)
+                    {
+                        var clonedResult = originalResult.Clone();
+                        clonedResult.Id = Guid.NewGuid();
+                        if (originalResult.AthleteId.HasValue && athleteMap.TryGetValue(originalResult.AthleteId.Value, out var newAthlete))
+                        {
+                            clonedResult.AthleteId = newAthlete.Id;
+                            clonedResult.Athlete = newAthlete;
+                        }
+                        if (originalResult.EventId.HasValue && eventMap.TryGetValue(originalResult.EventId.Value, out var newEvent))
+                        {
+                            clonedResult.EventId = newEvent.Id;
+                            clonedResult.Event = newEvent;
+                        }
+                        allResults.Add(clonedResult);
+                    }
+                }
+            }
+            return (allEvents, allAthletes, allResults);
         }
 
         static async Task Main(string[] args)

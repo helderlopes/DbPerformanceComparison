@@ -17,4 +17,19 @@ public class Result
     public int? Position { get; set; }
     public int? Bib { get; set; }
     public TimeSpan? Mark { get; set; }
+
+    public Result Clone()
+    {
+        return new Result
+        {
+            Id = this.Id,
+            Athlete = this.Athlete,
+            AthleteId = this.AthleteId,
+            Event = this.Event,
+            EventId = this.EventId,
+            Position = this.Position,
+            Bib = this.Bib,
+            Mark = this.Mark
+        };
+    }
 }
