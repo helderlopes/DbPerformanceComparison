@@ -15,5 +15,6 @@ namespace DbPerformanceComparison.Repositories.Interfaces
         Task<IEnumerable<T>> GetAllAsync();
         Task<bool> UpdateAsync(T entity);
         Task<bool> DeleteAsync(Guid id);
+        Task<int> DeleteAllAsync();
     }
 }

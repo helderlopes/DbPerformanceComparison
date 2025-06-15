@@ -64,5 +64,11 @@ namespace DbPerformanceComparison.Repositories.Mongo
             ReplaceOneResult result = await _collection.ReplaceOneAsync(filter, entity);
             return result.ModifiedCount > 0;
         }
+
+        public async Task<int> DeleteAllAsync()
+        {
+            var result = await _collection.DeleteManyAsync(Builders<T>.Filter.Empty);
+            return (int)result.DeletedCount;
+        }
     }
 }

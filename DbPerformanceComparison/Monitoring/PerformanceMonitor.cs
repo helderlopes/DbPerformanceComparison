@@ -152,5 +152,28 @@ namespace DbPerformanceComparison.Monitoring
             MetricLogger.Log(metric);
             return result;
         }
+
+        public async Task<int> MeasureDeleteAllAsync<T>(
+           IRepository<T> repository,
+           Func<Task<int>> action) where T : class
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            int result = await action();
+
+            stopwatch.Stop();
+
+            var metric = new MetricResult
+            {
+                Operation = action.Method.Name,
+                Database = repository.DatabaseName,
+                EntityType = typeof(T).Name,
+                EntityCount = result,
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+            };
+
+            MetricLogger.Log(metric);
+            return result;
+        }
     }
 }
