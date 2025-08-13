@@ -47,37 +47,58 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
         public async Task AddManyAsync(IEnumerable<Result> entities)
         {
-            await using NpgsqlConnection connection = await _service.GetConnectionAsync();
+            const int maxParameters = 65535;
+            const int paramsPerRow = 6; // Id, AthleteId, EventId, Position, Bib, Mark
+            int maxRowsPerBatch = maxParameters / paramsPerRow;
 
-            StringBuilder queryBuilder = new("INSERT INTO Results (Id, AthleteId, EventId, Position, Bib, Mark) VALUES ");
-            List<NpgsqlParameter> parameters = new();
-            int index = 0;
+            var entityList = entities.ToList(); 
+            int total = entityList.Count;
 
-            foreach (var entity in entities)
-            {
-                queryBuilder.Append($"(@Id{index}, @AthleteId{index}, @EventId{index}, @Position{index}, @Bib{index}, @Mark{index}),");
-                parameters.Add(new NpgsqlParameter($"@Id{index}", entity.Id));
-                parameters.Add(new NpgsqlParameter($"@AthleteId{index}", entity.AthleteId ?? (object)DBNull.Value));
-                parameters.Add(new NpgsqlParameter($"@EventId{index}", entity.EventId ?? (object)DBNull.Value));
-                parameters.Add(new NpgsqlParameter($"@Position{index}", entity.Position ?? (object)DBNull.Value));
-                parameters.Add(new NpgsqlParameter($"@Bib{index}", entity.Bib ?? (object)DBNull.Value));
-                parameters.Add(new NpgsqlParameter($"@Mark{index}", entity.Mark ?? (object)DBNull.Value));
-                index++;
-            }
-
-            queryBuilder.Length--; // Remove last comma
-            queryBuilder.Append(";");
-
-            await using NpgsqlCommand command = new(queryBuilder.ToString(), connection);
-            command.Parameters.AddRange(parameters.ToArray());
+            await using var connection = await _service.GetConnectionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
 
             try
             {
-                await command.ExecuteNonQueryAsync();
+                for (int i = 0; i < total; i += maxRowsPerBatch)
+                {
+                    int currentBatchSize = Math.Min(maxRowsPerBatch, total - i);
+
+                    StringBuilder queryBuilder = new("INSERT INTO Results (Id, AthleteId, EventId, Position, Bib, Mark) VALUES ");
+                    List<NpgsqlParameter> parameters = new(currentBatchSize * paramsPerRow);
+
+                    for (int j = 0; j < currentBatchSize; j++)
+                    {
+                        var entity = entityList[i + j];
+                        queryBuilder.Append($"(@Id{j}, @AthleteId{j}, @EventId{j}, @Position{j}, @Bib{j}, @Mark{j}),");
+
+                        parameters.Add(new NpgsqlParameter($"@Id{j}", entity.Id));
+                        parameters.Add(new NpgsqlParameter($"@AthleteId{j}", entity.AthleteId ?? (object)DBNull.Value));
+                        parameters.Add(new NpgsqlParameter($"@EventId{j}", entity.EventId ?? (object)DBNull.Value));
+                        parameters.Add(new NpgsqlParameter($"@Position{j}", entity.Position ?? (object)DBNull.Value));
+                        parameters.Add(new NpgsqlParameter($"@Bib{j}", entity.Bib ?? (object)DBNull.Value));
+                        parameters.Add(new NpgsqlParameter($"@Mark{j}", entity.Mark ?? (object)DBNull.Value));
+                    }
+
+                    queryBuilder.Length--;
+                    queryBuilder.Append(';');
+
+                    await using var command = new NpgsqlCommand(queryBuilder.ToString(), connection, transaction);
+                    command.Parameters.AddRange(parameters.ToArray());
+                    await command.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
             }
             catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
             {
                 Console.WriteLine("Error: invalid Foreign Key.");
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
             }
         }
 

@@ -93,7 +93,7 @@ namespace DbPerformanceComparison.Monitoring
             _results = allResults;
         }
 
-        public async Task Init(int repetitions = 1, int scale = 1)
+        public async Task Init(int scale = 1, int repetitions = 1)
         {
             _repetitions = repetitions;
             _scale = scale;

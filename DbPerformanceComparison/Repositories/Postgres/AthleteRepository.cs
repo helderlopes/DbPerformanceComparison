@@ -32,28 +32,50 @@ namespace DbPerformanceComparison.Repositories.Postgres
 
         public async Task AddManyAsync(IEnumerable<Athlete> entities)
         {
-            await using NpgsqlConnection connection = await _service.GetConnectionAsync();
+            const int maxParameters = 65535;
+            const int paramsPerRow = 4; // Id, Name, Sex, Country
+            int maxRowsPerBatch = maxParameters / paramsPerRow;
 
-            StringBuilder queryBuilder = new("INSERT INTO Athletes (Id, Name, Sex, Country) VALUES ");
-            List<NpgsqlParameter> parameters = new();
-            int index = 0;
+            var entityList = entities.ToList(); 
+            int total = entityList.Count;
 
-            foreach (var entity in entities)
+            await using var connection = await _service.GetConnectionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+
+            try
             {
-                queryBuilder.Append($"(@Id{index}, @Name{index}, @Sex{index}, @Country{index}),");
-                parameters.Add(new NpgsqlParameter($"@Id{index}", entity.Id));
-                parameters.Add(new NpgsqlParameter($"@Name{index}", entity.Name ?? (object)DBNull.Value));
-                parameters.Add(new NpgsqlParameter($"@Sex{index}", entity.Sex ?? (object)DBNull.Value));
-                parameters.Add(new NpgsqlParameter($"@Country{index}", entity.Country ?? (object)DBNull.Value));
-                index++;
+                for (int i = 0; i < total; i += maxRowsPerBatch)
+                {
+                    int currentBatchSize = Math.Min(maxRowsPerBatch, total - i);
+
+                    StringBuilder queryBuilder = new("INSERT INTO Athletes (Id, Name, Sex, Country) VALUES ");
+                    List<NpgsqlParameter> parameters = new(currentBatchSize * paramsPerRow);
+
+                    for (int j = 0; j < currentBatchSize; j++)
+                    {
+                        var entity = entityList[i + j];
+                        queryBuilder.Append($"(@Id{j}, @Name{j}, @Sex{j}, @Country{j}),");
+                        parameters.Add(new NpgsqlParameter($"@Id{j}", entity.Id));
+                        parameters.Add(new NpgsqlParameter($"@Name{j}", entity.Name ?? (object)DBNull.Value));
+                        parameters.Add(new NpgsqlParameter($"@Sex{j}", entity.Sex ?? (object)DBNull.Value));
+                        parameters.Add(new NpgsqlParameter($"@Country{j}", entity.Country ?? (object)DBNull.Value));
+                    }
+
+                    queryBuilder.Length--; 
+                    queryBuilder.Append(';');
+
+                    await using var command = new NpgsqlCommand(queryBuilder.ToString(), connection, transaction);
+                    command.Parameters.AddRange(parameters.ToArray());
+                    await command.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
             }
-
-            queryBuilder.Length--; // Remove last comma
-            queryBuilder.Append(";");
-
-            await using NpgsqlCommand command = new(queryBuilder.ToString(), connection);
-            command.Parameters.AddRange(parameters.ToArray());
-            await command.ExecuteNonQueryAsync();
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<bool> DeleteAsync(Guid id)
