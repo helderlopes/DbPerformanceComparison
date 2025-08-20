@@ -10,7 +10,13 @@ namespace DbPerformanceComparison.Monitoring
 {
     public class PerformanceMonitor
     {
-        private static readonly MetricLogger MetricLogger = new(true);
+        private static readonly MetricLogger MetricLogger = new();
+        private int _scale;
+
+        public PerformanceMonitor(int scale = 1)
+        {
+            _scale = scale;
+        }
 
         public async Task MeasureAddAsync<T>(
            IRepository<T> repository,
@@ -29,7 +35,8 @@ namespace DbPerformanceComparison.Monitoring
                 Database = repository.DatabaseName,
                 EntityType = typeof(T).Name,
                 EntityCount = 1,
-                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds,
+                Scale = _scale
             };
 
             MetricLogger.Log(metric);
@@ -52,7 +59,8 @@ namespace DbPerformanceComparison.Monitoring
                 Database = repository.DatabaseName,
                 EntityType = typeof(T).Name,
                 EntityCount = entities.Count(),
-                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds,
+                Scale = _scale
             };
 
             MetricLogger.Log(metric);
@@ -75,7 +83,8 @@ namespace DbPerformanceComparison.Monitoring
                 Database = repository.DatabaseName,
                 EntityType = typeof(T).Name,
                 EntityCount = 1,
-                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds,
+                Scale = _scale
             };
 
             MetricLogger.Log(metric);
@@ -98,7 +107,8 @@ namespace DbPerformanceComparison.Monitoring
                 Database = repository.DatabaseName,
                 EntityType = typeof(T).Name,
                 EntityCount = result?.Count() ?? 0,
-                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds,
+                Scale = _scale
             };
 
             MetricLogger.Log(metric);
@@ -122,7 +132,8 @@ namespace DbPerformanceComparison.Monitoring
                 Database = repository.DatabaseName,
                 EntityType = typeof(T).Name,
                 EntityCount = 1,
-                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds,
+                Scale = _scale
             };
 
             MetricLogger.Log(metric);
@@ -146,7 +157,8 @@ namespace DbPerformanceComparison.Monitoring
                 Database = repository.DatabaseName,
                 EntityType = typeof(T).Name,
                 EntityCount = 1,
-                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds,
+                Scale = _scale
             };
 
             MetricLogger.Log(metric);
@@ -169,7 +181,8 @@ namespace DbPerformanceComparison.Monitoring
                 Database = repository.DatabaseName,
                 EntityType = typeof(T).Name,
                 EntityCount = result,
-                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds
+                ElapsedUs = (long)stopwatch.Elapsed.TotalMicroseconds,
+                Scale = _scale
             };
 
             MetricLogger.Log(metric);

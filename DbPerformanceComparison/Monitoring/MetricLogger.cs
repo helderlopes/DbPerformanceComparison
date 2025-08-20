@@ -20,7 +20,7 @@ namespace DbPerformanceComparison.Monitoring
             if (!File.Exists(FilePath))
             {
                 using StreamWriter writer = new(FilePath, append: true);
-                writer.WriteLine("Operation,Database,ElapsedUs,EntityType,EntityCount");
+                writer.WriteLine("Operation,Database,ElapsedUs,EntityType,EntityCount,Scale");
             }
         }
 
