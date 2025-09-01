@@ -131,80 +131,45 @@ namespace DbPerformanceComparison.Monitoring
             for (int i = 0; i < _repetitions; i++)
             {
                 await _performanceMonitor.MeasureAddManyAsync(_postgresAthleteRepository, _athletes, _postgresAthleteRepository.AddManyAsync);
-                Thread.Sleep(100);
                 await _performanceMonitor.MeasureAddManyAsync(_mongoAthleteRepository, _athletes, _mongoAthleteRepository.AddManyAsync);
-                Thread.Sleep(100);
                 await _performanceMonitor.MeasureAddManyAsync(_postgresEventRepository, _events, _postgresEventRepository.AddManyAsync);
-                Thread.Sleep(100);
                 await _performanceMonitor.MeasureAddManyAsync(_mongoEventRepository, _events, _mongoEventRepository.AddManyAsync);
-                Thread.Sleep(100);
                 await _performanceMonitor.MeasureAddManyAsync(_postgresResultRepository, _results, _postgresResultRepository.AddManyAsync);
-                Thread.Sleep(100);
                 await _performanceMonitor.MeasureAddManyAsync(_mongoResultRepository, _results, _mongoResultRepository.AddManyAsync);
-                Thread.Sleep(100);
 
                 _ = await _performanceMonitor.MeasureGetByIdAsync(_postgresAthleteRepository, _athletes.First().Id, _postgresAthleteRepository.GetByIdAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureGetByIdAsync(_mongoAthleteRepository, _athletes.First().Id, _mongoAthleteRepository.GetByIdAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureGetByIdAsync(_postgresEventRepository, _events.First().Id, _postgresEventRepository.GetByIdAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureGetByIdAsync(_mongoEventRepository, _events.First().Id, _mongoEventRepository.GetByIdAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureGetByIdAsync(_postgresResultRepository, _results.First().Id, _postgresResultRepository.GetByIdAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureGetByIdAsync(_mongoResultRepository, _results.First().Id, _mongoResultRepository.GetByIdAsync);
-                Thread.Sleep(100);
 
                 _ = (await _performanceMonitor.MeasureGetAllAsync(_postgresAthleteRepository, _postgresAthleteRepository.GetAllAsync))?.ToList() ?? new List<Athlete>();
-                Thread.Sleep(100);
                 _ = (await _performanceMonitor.MeasureGetAllAsync(_mongoAthleteRepository, _mongoAthleteRepository.GetAllAsync))?.ToList() ?? new List<Athlete>();
-                Thread.Sleep(100);
                 _ = (await _performanceMonitor.MeasureGetAllAsync(_postgresEventRepository, _postgresEventRepository.GetAllAsync))?.ToList() ?? new List<Event>();
-                Thread.Sleep(100);
                 _ = (await _performanceMonitor.MeasureGetAllAsync(_mongoEventRepository, _mongoEventRepository.GetAllAsync))?.ToList() ?? new List<Event>();
-                Thread.Sleep(100);
                 _ = (await _performanceMonitor.MeasureGetAllAsync(_postgresResultRepository, _postgresResultRepository.GetAllAsync))?.ToList() ?? new List<Result>();
-                Thread.Sleep(100);
                 _ = (await _performanceMonitor.MeasureGetAllAsync(_mongoResultRepository, _mongoResultRepository.GetAllAsync))?.ToList() ?? new List<Result>();
-                Thread.Sleep(100);
 
                 _ = await _performanceMonitor.MeasureUpdateAsync(_postgresAthleteRepository, _athletes.First(), _postgresAthleteRepository.UpdateAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureUpdateAsync(_mongoAthleteRepository, _athletes.First(), _mongoAthleteRepository.UpdateAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureUpdateAsync(_postgresEventRepository, _events.First(), _postgresEventRepository.UpdateAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureUpdateAsync(_mongoEventRepository, _events.First(), _mongoEventRepository.UpdateAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureUpdateAsync(_postgresResultRepository, _results.First(), _postgresResultRepository.UpdateAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureUpdateAsync(_mongoResultRepository, _results.First(), _mongoResultRepository.UpdateAsync);
-                Thread.Sleep(100);
 
                 _ = await _performanceMonitor.MeasureDeleteAsync(_postgresResultRepository, _results.First().Id, _postgresResultRepository.DeleteAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_mongoResultRepository, _results.First().Id, _mongoResultRepository.DeleteAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_postgresAthleteRepository, _athletes.First().Id, _postgresAthleteRepository.DeleteAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_mongoAthleteRepository, _athletes.First().Id, _mongoAthleteRepository.DeleteAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_postgresEventRepository, _events.First().Id, _postgresEventRepository.DeleteAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAsync(_mongoEventRepository, _events.First().Id, _mongoEventRepository.DeleteAsync);
-                Thread.Sleep(100);
 
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_postgresResultRepository, _postgresResultRepository.DeleteAllAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_mongoResultRepository, _mongoResultRepository.DeleteAllAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_postgresAthleteRepository, _postgresAthleteRepository.DeleteAllAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_mongoAthleteRepository, _mongoAthleteRepository.DeleteAllAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_postgresEventRepository, _postgresEventRepository.DeleteAllAsync);
-                Thread.Sleep(100);
                 _ = await _performanceMonitor.MeasureDeleteAllAsync(_mongoEventRepository, _mongoEventRepository.DeleteAllAsync);
             }
         }
